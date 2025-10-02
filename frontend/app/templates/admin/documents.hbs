@@ -4,6 +4,22 @@
   Ajouter un document
 </button>
 
+<ul>
+  {{#each this.documents as |doc|}}
+    <li>
+      <strong>{{doc.name}}</strong> 
+      (date: {{doc.doc_date}}) 
+      — créé le {{doc.created_at}}
+
+      <button type="button" {{on "click" (fn this.downloadDocument doc.id doc.name)}}>
+        Télécharger
+      </button>
+    </li>
+  {{else}}
+    <li>Aucun document pour l'instant</li>
+  {{/each}}
+</ul>
+
 {{#if this.isModalOpen}}
   <div class="modal-backdrop">
     <div class="modal">
@@ -20,10 +36,10 @@
       </div>
 
       <div class="form-group">
-        <label>Fichier :</label>
-        <input type="file" {{on "change" this.handleFileChange}} />
+        <label>Fichier (PDF uniquement) :</label>
+        <input type="file" accept="application/pdf" {{on "change" this.handleFileChange}} />
       </div>
-
+      
       <div class="actions">
         <button type="button" {{on "click" this.uploadFile}}>Importer</button>
         <button type="button" {{on "click" this.closeModal}}>Annuler</button>

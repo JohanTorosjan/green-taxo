@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
+from app.services.documents import upload_documents,get_all_documents,download_single_document
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
@@ -14,7 +15,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -99,3 +100,59 @@ async def get_example(example_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+
+
+@app.post("/api/documents")
+async def create_document(
+    name: str = Form(...),
+    doc_date: str = Form(...),
+    file: UploadFile = File(...)
+):
+    try:
+        result = await upload_documents(name,doc_date,file)
+        return result
+        # conn = get_db_connection()
+        # cur = conn.cursor()
+
+        # file_bytes = await file.read()
+
+        # cur.execute("""
+        #     INSERT INTO documents (name, doc_date, file_data)
+        #     VALUES (%s, %s, %s)
+        #     RETURNING id, name, doc_date, created_at, updated_at
+        # """, (name, doc_date, psycopg2.Binary(file_bytes)))
+
+        # new_doc = cur.fetchone()
+        # conn.commit()
+        # cur.close()
+        # conn.close()
+
+        # return {
+        #     "id": new_doc[0],
+        #     "name": new_doc[1],
+        #     "doc_date": str(new_doc[2]),
+        #     "created_at": new_doc[3],
+        #     "updated_at": new_doc[4]
+        # }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
+
+
+@app.get("/api/documents")
+async def list_documents():
+    try:
+        result = await get_all_documents()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
+
+
+@app.get("/api/documents/{doc_id}/download")
+async def download_document(doc_id: int):
+    try:
+        result = await download_single_document(doc_id=doc_id)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du téléchargement : {str(e)}")

@@ -21,3 +21,32 @@ INSERT INTO examples (name, description) VALUES
 
 -- Afficher les données insérées
 SELECT * FROM examples;
+
+
+
+-- VRAI DB : 
+
+-- Créer la table documents
+CREATE TABLE IF NOT EXISTS documents (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    doc_date DATE NOT NULL,
+    file_data BYTEA NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Mettre à jour automatiquement updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_documents_updated_at ON documents;
+CREATE TRIGGER update_documents_updated_at
+BEFORE UPDATE ON documents
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
