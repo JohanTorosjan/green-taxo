@@ -1,0 +1,33 @@
+<h2>Documents</h2>
+
+<button type="button" {{on "click" this.openModal}}>
+  Ajouter un document
+</button>
+
+{{#if this.isModalOpen}}
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>Importer un document</h3>
+
+      <div class="form-group">
+        <label>Nom du document :</label>
+        <input type="text" {{on "input" this.updateName}} value={{this.documentName}} />
+      </div>
+
+      <div class="form-group">
+        <label>Date :</label>
+        <input type="date" {{on "input" this.updateDate}} value={{this.documentDate}} />
+      </div>
+
+      <div class="form-group">
+        <label>Fichier :</label>
+        <input type="file" {{on "change" this.handleFileChange}} />
+      </div>
+
+      <div class="actions">
+        <button type="button" {{on "click" this.uploadFile}}>Importer</button>
+        <button type="button" {{on "click" this.closeModal}}>Annuler</button>
+      </div>
+    </div>
+  </div>
+{{/if}}
