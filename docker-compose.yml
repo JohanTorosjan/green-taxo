@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: green-taxo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-greentaxo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-greentaxo_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - green-taxo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-greentaxo} -d ${POSTGRES_DB:-greentaxo_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: green-taxo-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-greentaxo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-greentaxo_db}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      DEBUG: ${DEBUG:-true}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_cache:/root/.cache
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - green-taxo-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend Ember.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: green-taxo-frontend
+    restart: unless-stopped
+    environment:
+      API_HOST: ${API_HOST:-http://localhost:8000}
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/dist
+      - /app/tmp
+    depends_on:
+      - backend
+    networks:
+      - green-taxo-network
+    command: npm start
+
+networks:
+  green-taxo-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  backend_cache:
