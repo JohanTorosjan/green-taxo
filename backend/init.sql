@@ -19,22 +19,29 @@ INSERT INTO examples (name, description) VALUES
     ('Example 2', 'Ceci est le deuxième exemple'),
     ('Example 3', 'Un exemple avec une description plus longue pour tester');
 
--- Afficher les données insérées
-SELECT * FROM examples;
-
-
-
 -- VRAI DB : 
 
--- Créer la table documents
+-- Créer la table documents avec les champs d'analyse
 CREATE TABLE IF NOT EXISTS documents (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     doc_date DATE NOT NULL,
     file_data BYTEA NOT NULL,
+    
+    -- Champs pour l'analyse LLM
+    analysis_status VARCHAR(50) DEFAULT 'pending',
+    extracted_text TEXT,
+    analysis_results TEXT,
+    task_id VARCHAR(255),
+    
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Créer des index pour les performances
+CREATE INDEX IF NOT EXISTS idx_documents_analysis_status ON documents(analysis_status);
+CREATE INDEX IF NOT EXISTS idx_documents_task_id ON documents(task_id);
+CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
 
 -- Mettre à jour automatiquement updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

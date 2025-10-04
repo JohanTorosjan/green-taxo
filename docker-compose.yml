@@ -24,6 +24,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis pour Celery
+  redis:
+    image: redis:7-alpine
+    container_name: green-taxo-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - green-taxo-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Backend FastAPI
   backend:
     build:
@@ -33,7 +48,10 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-greentaxo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-greentaxo_db}
+      REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       DEBUG: ${DEBUG:-true}
     ports:
@@ -44,9 +62,57 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - green-taxo-network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: green-taxo-celery-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-greentaxo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-greentaxo_db}
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      DEBUG: ${DEBUG:-true}
+    volumes:
+      - ./backend:/app
+      - backend_cache:/root/.cache
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - green-taxo-network
+    command: celery -A app.celery_app worker --loglevel=info
+
+  # Celery Flower (monitoring optionnel)
+  celery-flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: green-taxo-flower
+    restart: unless-stopped
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - green-taxo-network
+    command: celery -A app.celery_app flower --port=5555
 
   # Frontend Ember.js
   frontend:

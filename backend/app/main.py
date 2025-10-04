@@ -1,14 +1,19 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.services.documents import upload_documents,get_all_documents,download_single_document
+from app.services.documents import (
+    upload_documents, 
+    get_all_documents, 
+    download_single_document,
+    get_document_analysis
+)
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="API Backend avec FastAPI et CrewAI",
+    description="API Backend avec FastAPI, Celery et agents LLM",
     version="1.0.0",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
@@ -108,38 +113,21 @@ async def create_document(
     doc_date: str = Form(...),
     file: UploadFile = File(...)
 ):
+    """
+    Upload un document et déclenche automatiquement l'analyse LLM en arrière-plan
+    """
     try:
-        result = await upload_documents(name,doc_date,file)
+        result = await upload_documents(name, doc_date, file)
         return result
-        # conn = get_db_connection()
-        # cur = conn.cursor()
-
-        # file_bytes = await file.read()
-
-        # cur.execute("""
-        #     INSERT INTO documents (name, doc_date, file_data)
-        #     VALUES (%s, %s, %s)
-        #     RETURNING id, name, doc_date, created_at, updated_at
-        # """, (name, doc_date, psycopg2.Binary(file_bytes)))
-
-        # new_doc = cur.fetchone()
-        # conn.commit()
-        # cur.close()
-        # conn.close()
-
-        # return {
-        #     "id": new_doc[0],
-        #     "name": new_doc[1],
-        #     "doc_date": str(new_doc[2]),
-        #     "created_at": new_doc[3],
-        #     "updated_at": new_doc[4]
-        # }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
 
 
 @app.get("/api/documents")
 async def list_documents():
+    """
+    Liste tous les documents avec leur statut d'analyse
+    """
     try:
         result = await get_all_documents()
         return result
@@ -147,8 +135,25 @@ async def list_documents():
         raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
 
 
+@app.get("/api/documents/{doc_id}/analysis")
+async def get_analysis(doc_id: int):
+    """
+    Récupère le statut et les résultats de l'analyse d'un document
+    """
+    try:
+        result = await get_document_analysis(doc_id)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
+
+
 @app.get("/api/documents/{doc_id}/download")
 async def download_document(doc_id: int):
+    """
+    Télécharge le fichier original d'un document
+    """
     try:
         result = await download_single_document(doc_id=doc_id)
         return result
