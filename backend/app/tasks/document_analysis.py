@@ -87,8 +87,11 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         
         # 2. Extraire le texte du document
         logger.info(f"Extraction du texte du document {filename}")
+        print("file_data")
+        print(file_data)
         text_content = extract_text_from_file(bytes(file_data), filename)
-        
+        print("text_content")
+        print(text_content)
         # 3. Mettre à jour le statut du document
         cur.execute("""
             UPDATE documents 
