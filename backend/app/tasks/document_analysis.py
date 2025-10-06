@@ -104,45 +104,65 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         # 4. Analyser le document avec les agents LLM
         logger.info(f" {doc_id}")
         
-        from app.agents.llm_agents import get_analysis_agents
+        # from app.agents.llm_agents import get_analysis_agents
         
-        # Créer les agents d'analyse
-        agents = get_analysis_agents(provider="mistral")  # ou "anthropic", "mistral"
+        # # Créer les agents d'analyse
+        # agents = get_analysis_agents(provider="mistral")  # ou "anthropic", "mistral"
         
-        # Préparer les métadonnées
-        metadata = {
-            "name": filename,
-            "date": str(doc_date),
-            "id": doc_id
-        }
+        # # Préparer les métadonnées
+        # metadata = {
+        #     "name": filename,
+        #     "date": str(doc_date),
+        #     "id": doc_id
+        # }
         
-        # Lancer l'analyse avec les agents
-        agents_result = agents.analyze_document(text_content, metadata)
+        # # Lancer l'analyse avec les agents
+        # agents_result = agents.analyze_document(text_content, metadata)
         
-        analysis_result = {
-            "document_id": doc_id,
-            "filename": filename,
-            "doc_date": str(doc_date),
-            "text_length": len(text_content),
-            "status": "analyzed",
-            "agents_results": agents_result
-        }
+        # analysis_result = {
+        #     "document_id": doc_id,
+        #     "filename": filename,
+        #     "doc_date": str(doc_date),
+        #     "text_length": len(text_content),
+        #     "status": "analyzed",
+        #     "agents_results": agents_result
+        # }
         
-        # 5. Sauvegarder les résultats de l'analyse
-        cur.execute("""
-            UPDATE documents 
-            SET analysis_status = %s, 
-                analysis_results = %s,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = %s
-        """, ('completed', str(analysis_result), doc_id))
+        # # 5. Sauvegarder les résultats de l'analyse
+        # cur.execute("""
+        #     UPDATE documents 
+        #     SET analysis_status = %s, 
+        #         analysis_results = %s,
+        #         updated_at = CURRENT_TIMESTAMP
+        #     WHERE id = %s
+        # """, ('completed', str(analysis_result), doc_id))
         
-        conn.commit()
-        cur.close()
-        conn.close()
+        # conn.commit()
+        # cur.close()
+        # conn.close()
         
-        logger.info(f"Analyse du document {doc_id} terminée avec succès")
-        return analysis_result
+        # logger.info(f"Analyse du document {doc_id} terminée avec succès")
+        # return analysis_result
+
+
+        from app.agents.llm_document_agents import get_criteria_extractor
+        extractor = get_criteria_extractor(provider="mistral", tier="powerful")
+        result = extractor.extract_criteria_from_regulation(
+            regulation_text=text_content,
+            document_metadata={
+                "name": "ESRS E1 - Climate Change",
+                "regulation_type": "ESRS",
+                "version": "2023",
+                "extraction_date": "2025-10-06"
+            }
+        )
+        
+        print(result)
+        if result["status"] == "success":
+            criteria_json = result["criteria"]
+            print('-------------')
+
+            print(criteria_json)
         
     except Exception as e:
         logger.error(f"Erreur lors de l'analyse du document {doc_id}: {str(e)}")
