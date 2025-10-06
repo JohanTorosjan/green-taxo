@@ -23,23 +23,21 @@ def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
     file_lower = filename.lower()
     
     try:
-        if file_lower.endswith('.pdf'):
-            pdf_reader = PyPDF2.PdfReader(BytesIO(file_bytes))
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-            return text
+        pdf_reader = PyPDF2.PdfReader(BytesIO(file_bytes))
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+        # elif file_lower.endswith(('.docx', '.doc')):
+        #     doc = docx.Document(BytesIO(file_bytes))
+        #     text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        #     return text
         
-        elif file_lower.endswith(('.docx', '.doc')):
-            doc = docx.Document(BytesIO(file_bytes))
-            text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
-            return text
+        # elif file_lower.endswith('.txt'):
+        #     return file_bytes.decode('utf-8')
         
-        elif file_lower.endswith('.txt'):
-            return file_bytes.decode('utf-8')
-        
-        else:
-            return f"Type de fichier non supporté: {filename}"
+        # else:
+        #     return f"Type de fichier non supporté: {filename}"
     
     except Exception as e:
         logger.error(f"Erreur lors de l'extraction du texte: {str(e)}")
