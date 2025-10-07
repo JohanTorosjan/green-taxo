@@ -57,3 +57,14 @@ CREATE TRIGGER update_documents_updated_at
 BEFORE UPDATE ON documents
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TABLE IF NOT EXISTS criterias (
+    id SERIAL PRIMARY KEY,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    nom VARCHAR(255),
+    description TEXT,
+    coefficient INTEGER,
+    data JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);

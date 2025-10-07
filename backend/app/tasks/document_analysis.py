@@ -110,11 +110,11 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         # agents = get_analysis_agents(provider="mistral")  # ou "anthropic", "mistral"
         
         # # Préparer les métadonnées
-        # metadata = {
-        #     "name": filename,
-        #     "date": str(doc_date),
-        #     "id": doc_id
-        # }
+        metadata = {
+            "name": filename,
+            "date": str(doc_date),
+            "id": doc_id
+        }
         
         # # Lancer l'analyse avec les agents
         # agents_result = agents.analyze_document(text_content, metadata)
@@ -145,25 +145,62 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         # return analysis_result
 
 
-        from app.agents.llm_document_agents import get_criteria_extractor
-        extractor = get_criteria_extractor(provider="mistral", tier="powerful")
+        # from app.agents.llm_document_agents import get_criteria_extractor
+        # extractor = get_criteria_extractor(provider="mistral", tier="powerful")
+        # result = extractor.extract_criteria_from_regulation(
+        #     regulation_text=text_content,
+        #     document_metadata=metadata
+        # )
+        from app.agents.llm_document_soft_agents import get_criteria_extractor
+        extractor = get_criteria_extractor(provider="mistral", tier="balanced")  # "balanced" recommandé
         result = extractor.extract_criteria_from_regulation(
             regulation_text=text_content,
-            document_metadata={
-                "name": "ESRS E1 - Climate Change",
-                "regulation_type": "ESRS",
-                "version": "2023",
-                "extraction_date": "2025-10-06"
-            }
+            document_metadata=metadata
         )
-        
+        print("ANALLLLLYSE TERMINEEEEEEEEEE")
         print(result)
         if result["status"] == "success":
-            criteria_json = result["criteria"]
-            print('-------------')
+            cur.execute("""
+            UPDATE documents 
+            SET analysis_status = %s, 
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+            """, ('completed', doc_id))
+            conn.commit()
 
-            print(criteria_json)
-        
+            criteria_data = result["criteria"]
+            print("-------------")
+            print(criteria_data)
+            for criterion in criteria_data.get("criteria", []):
+                try:
+                    cur.execute("""
+                        INSERT INTO criterias (document_id, nom, description, coefficient, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """, (
+                        doc_id,
+                        criterion.get("name"),
+                        criterion.get("description"),
+                        criterion.get("coefficient")
+                    ))
+                    print(f"Critère sauvegardé: {criterion.get('name')}")
+                except Exception as e:
+                    print(f"Erreur lors de la sauvegarde du critère '{criterion.get('name')}': {str(e)}")
+                    conn.rollback()
+                    raise
+            conn.commit()
+            print(f"Total de {len(criteria_data.get('criteria', []))} critères sauvegardés pour le document {doc_id}")
+    
+        else:
+            print(f"Erreur lors de l'extraction: {result.get('message', 'Erreur inconnue')}")
+            cur.execute("""
+                UPDATE documents 
+                SET analysis_status = %s, 
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, ('failed', doc_id))
+            conn.commit()
+        cur.close()
+        conn.close()
     except Exception as e:
         logger.error(f"Erreur lors de l'analyse du document {doc_id}: {str(e)}")
         
@@ -176,7 +213,7 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
                 SET analysis_status = %s,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-            """, ('failed', doc_id))
+            """, ('failed_2', doc_id))
             conn.commit()
             cur.close()
             conn.close()

@@ -135,11 +135,7 @@ class EUSustainabilityCriteriaExtractor:
                         "category": "environmental|social|governance|cross-cutting",
                         "subcategory": "specific topic (e.g., climate, water, employees)",
                         "metric_type": "quantitative|qualitative|both",
-                        "mandatory": boolean,
-                        "materiality_dependent": boolean,
                         "data_sources": ["list of typical data sources"],
-                        "verification_level": "limited|reasonable|not_specified",
-                        "related_standards": ["list of related ESRS/GRI/other standards"]
                     }
                 ]
             }
@@ -185,7 +181,7 @@ class EUSustainabilityCriteriaExtractor:
 - Version/Date: {document_metadata.get('version', 'Not specified')}
 
 **Regulation Text (excerpt):**
-{regulation_text[:5000]}...
+{regulation_text}...
 
 **Your Analysis Must Include:**
 1. **Regulation identification**: Exact name, reference number, and applicable scope
@@ -209,7 +205,7 @@ criteria from the document.
 **CRITICAL INSTRUCTION: Extract exactly 15-20 criteria - no more, no less.**
 
 **Document Text:**
-{regulation_text[:8000]}...
+{regulation_text}...
 
 **Selection Criteria - Prioritize:**
 1. **Mandatory disclosures** over voluntary ones
