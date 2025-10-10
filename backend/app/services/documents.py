@@ -153,3 +153,29 @@ async def download_single_document(doc_id):
     except Exception as e:
         logger.error(f"Erreur lors du téléchargement : {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors du téléchargement : {str(e)}")
+    
+
+async def get_criterias(doc_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT *
+            FROM criterias
+            WHERE document_id = %s
+        """, (doc_id,))
+
+        crit = cur.fetchall()
+        cur.close()
+        conn.close()
+        print(crit)
+        if not crit:
+            raise HTTPException(status_code=404, detail="No criterias found")
+
+        return crit
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération de l'analyse : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")

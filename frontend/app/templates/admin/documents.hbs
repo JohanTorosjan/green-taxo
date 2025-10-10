@@ -14,6 +14,19 @@
       <button type="button" {{on "click" (fn this.downloadDocument doc.id doc.name)}}>
         Télécharger
       </button>
+
+      {{#if (eq doc.analysis_status "completed")}}
+        <button type="button" {{on "click" (fn this.openAnalysis doc)}} class="btn-analysis">
+          📊 Voir l'analyse
+        </button>
+      {{else if (eq doc.analysis_status "processing")}}
+        <span class="status-pending">⏳ Analyse en cours...</span>
+        {{else if (eq doc.analysis_status "pending")}}
+        <span class="status-pending">⏳ Lancement de l'analyse...</span>
+      {{else}}
+        <span class="status-error">❌ Erreur d'analyse</span>
+      {{/if}}
+      
     </li>
   {{else}}
     <li>Aucun document pour l'instant</li>

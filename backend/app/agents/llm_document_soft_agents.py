@@ -230,7 +230,8 @@ Provide ONLY valid JSON.""",
                     result_str = result_str.split("```json")[1].split("```")[0].strip()
                 elif "```" in result_str:
                     result_str = result_str.split("```")[1].split("```")[0].strip()
-                
+                print("result_strrrrrrr")
+                print(result_str)
                 chunk_json = safe_json_loads(result_str.strip())
                 chunk_criteria = chunk_json.get('criteria', [])
                 
@@ -299,7 +300,9 @@ Provide ONLY valid JSON.""",
                 result_str = result_str.split("```")[1].split("```")[0].strip()
             
             result_str = result_str.strip()
-            criteria_json = safe_json_loads(result_str)
+            criteria_json = result_str
+            print('critera-json')
+            print(criteria_json)
             criteria_count = len(criteria_json.get('criteria', []))
             
             logger.info(f"Successfully extracted {criteria_count} criteria")
@@ -386,6 +389,10 @@ def safe_json_loads(s: str):
     Safely parse JSON with cleanup for common issues
     """
     try:
+        print("AAAAAAAAAAAAAAAAAA")
+        print(s)
+        print("AAAAAAAAAAAAAAAAAA")
+
         return json.loads(s)
     except json.JSONDecodeError as e:
         logger.warning(f"Initial JSON decode failed: {e}")

@@ -5,7 +5,8 @@ from app.services.documents import (
     upload_documents, 
     get_all_documents, 
     download_single_document,
-    get_document_analysis
+    get_document_analysis,
+    get_criterias
 )
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -161,3 +162,17 @@ async def download_document(doc_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du téléchargement : {str(e)}")
+    
+
+@app.get("/criterias/{doc_id}")
+async def download_document(doc_id: int):
+    """
+    Recupere tout les critères d'un documents
+    """
+    try:
+        result = await get_criterias(doc_id=doc_id)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la recuperation des critères : {str(e)}")

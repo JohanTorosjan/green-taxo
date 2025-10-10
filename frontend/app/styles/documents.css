@@ -1,7 +1,7 @@
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  inset: 0;
+  background: rgb(0 0 0 / 50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,12 +19,33 @@
   display: flex;
   flex-direction: column;
 }
+
 .form-group label {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
+
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
 }
+
+
+  .status-pending {
+    color: #ff9800;
+    font-weight: bold;
+    margin-left: 10px;
+  }
+
+  .status-error {
+    color: #f44336;
+    font-weight: bold;
+    margin-left: 10px;
+  }
+
+  .btn-analysis {
+    background-color: #4CAF50;
+    color: white;
+    margin-left: 10px;
+  }

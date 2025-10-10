@@ -1,0 +1,17 @@
+{{page-title "Criterias"}}
+<h1>
+    BONJOUR
+</h1>
+{{@model}}
+
+  {{#each @model as |critere|}}
+    <h1>
+        {{critere.nom}}
+    </h1>
+        <h2>
+        {{critere.description}}
+    </h2>
+    <span>
+        {{critere.coefficient}}
+    </span>
+  {{/each}}

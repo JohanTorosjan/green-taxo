@@ -417,6 +417,7 @@ logger = logging.getLogger(__name__)
 def safe_json_loads(s: str):
     """Try to safely parse JSON, with cleanup for truncated or malformed responses."""
     try:
+
         return json.loads(s)
     except JSONDecodeError as e:
         logger.warning(f"Initial JSON decode failed: {e}")
