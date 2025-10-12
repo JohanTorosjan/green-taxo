@@ -8,6 +8,8 @@ from typing import Dict, Any
 import PyPDF2
 import docx
 
+import asyncio 
+
 logger = logging.getLogger(__name__)
 
 
@@ -85,8 +87,6 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         
         # 2. Extraire le texte du document
         logger.info(f"Extraction du texte du document {filename}")
-        print("file_data")
-        print(file_data)
         text_content = extract_text_from_file(bytes(file_data), filename)
         print("text_content")
         print(text_content)
@@ -116,6 +116,21 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
             "id": doc_id
         }
         
+
+        result = asyncio.run(run_mistral_analysis(text_content, metadata))
+
+        logger.info(f"Analyse Mistral terminée pour le document {doc_id}")
+      
+        print(result)
+        print("result")
+        return {
+            "status": "success",
+            "document_id": doc_id,
+            "mistral_output": result
+        }
+
+
+
         # # Lancer l'analyse avec les agents
         # agents_result = agents.analyze_document(text_content, metadata)
         
@@ -151,56 +166,56 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         #     regulation_text=text_content,
         #     document_metadata=metadata
         # )
-        from app.agents.llm_document_soft_agents import get_criteria_extractor
-        extractor = get_criteria_extractor(provider="mistral", tier="balanced")  # "balanced" recommandé
-        result = extractor.extract_criteria_from_regulation(
-            regulation_text=text_content,
-            document_metadata=metadata
-        )
-        print("ANALLLLLYSE TERMINEEEEEEEEEE")
-        print(result)
-        if result["status"] == "success":
-            cur.execute("""
-            UPDATE documents 
-            SET analysis_status = %s, 
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = %s
-            """, ('completed', doc_id))
-            conn.commit()
+        # from app.agents.llm_document_soft_agents import get_criteria_extractor
+        # extractor = get_criteria_extractor(provider="mistral", tier="balanced")  # "balanced" recommandé
+        # result = extractor.extract_criteria_from_regulation(
+        #     regulation_text=text_content,
+        #     document_metadata=metadata
+        # )
+        # print("ANALLLLLYSE TERMINEEEEEEEEEE")
+        # print(result)
+        # if result["status"] == "success":
+        #     cur.execute("""
+        #     UPDATE documents 
+        #     SET analysis_status = %s, 
+        #         updated_at = CURRENT_TIMESTAMP
+        #     WHERE id = %s
+        #     """, ('completed', doc_id))
+        #     conn.commit()
 
-            criteria_data = result["criteria"]
-            print("-------------")
-            print(criteria_data)
-            for criterion in criteria_data.get("criteria", []):
-                try:
-                    cur.execute("""
-                        INSERT INTO criterias (document_id, nom, description, coefficient, created_at, updated_at)
-                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    """, (
-                        doc_id,
-                        criterion.get("name"),
-                        criterion.get("description"),
-                        criterion.get("coefficient")
-                    ))
-                    print(f"Critère sauvegardé: {criterion.get('name')}")
-                except Exception as e:
-                    print(f"Erreur lors de la sauvegarde du critère '{criterion.get('name')}': {str(e)}")
-                    conn.rollback()
-                    raise
-            conn.commit()
-            print(f"Total de {len(criteria_data.get('criteria', []))} critères sauvegardés pour le document {doc_id}")
+        #     criteria_data = result["criteria"]
+        #     print("-------------")
+        #     print(criteria_data)
+        #     for criterion in criteria_data.get("criteria", []):
+        #         try:
+        #             cur.execute("""
+        #                 INSERT INTO criterias (document_id, nom, description, coefficient, created_at, updated_at)
+        #                 VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        #             """, (
+        #                 doc_id,
+        #                 criterion.get("name"),
+        #                 criterion.get("description"),
+        #                 criterion.get("coefficient")
+        #             ))
+        #             print(f"Critère sauvegardé: {criterion.get('name')}")
+        #         except Exception as e:
+        #             print(f"Erreur lors de la sauvegarde du critère '{criterion.get('name')}': {str(e)}")
+        #             conn.rollback()
+        #             raise
+        #     conn.commit()
+        #     print(f"Total de {len(criteria_data.get('criteria', []))} critères sauvegardés pour le document {doc_id}")
     
-        else:
-            print(f"Erreur lors de l'extraction: {result.get('message', 'Erreur inconnue')}")
-            cur.execute("""
-                UPDATE documents 
-                SET analysis_status = %s, 
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = %s
-            """, ('failed', doc_id))
-            conn.commit()
-        cur.close()
-        conn.close()
+        # else:
+        #     print(f"Erreur lors de l'extraction: {result.get('message', 'Erreur inconnue')}")
+        #     cur.execute("""
+        #         UPDATE documents 
+        #         SET analysis_status = %s, 
+        #             updated_at = CURRENT_TIMESTAMP
+        #         WHERE id = %s
+        #     """, ('failed', doc_id))
+        #     conn.commit()
+        # cur.close()
+        # conn.close()
     except Exception as e:
         logger.error(f"Erreur lors de l'analyse du document {doc_id}: {str(e)}")
         
@@ -221,3 +236,26 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
             pass
         
         raise self.retry(exc=e, countdown=60)  # Retry après 60 secondes
+    
+
+
+from app.agents.llm_mistral_agent import LLMMistralAgent
+import asyncio
+import logging
+from celery import shared_task
+from typing import Dict, Any
+from app.agents.llm_mistral_agent import LLMMistralAgent
+
+logger = logging.getLogger(__name__)
+async def run_mistral_analysis(text_content: str, metadata: dict) -> str:
+    """
+    Fonction asynchrone appelée par Celery via asyncio.run()
+    """
+    agent = LLMMistralAgent(model="mistral-medium-latest")
+
+
+    response = await agent.extractCriteriaFromRegulation(text_content, temperature=0.2)
+    print("response de ici")
+    print(response)
+    return response
+
