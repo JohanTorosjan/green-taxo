@@ -1,17 +1,138 @@
-{{page-title "Criterias"}}
-<h1>
-    BONJOUR
-</h1>
-{{@model}}
+<div class="criterias-container">
+  <div class="criterias-header">
+    <h1>Gestion des Critères</h1>
+    <button class="btn btn-primary" {{on "click" this.openCreateModal}}>
+      + Ajouter un critère
+    </button>
+  </div>
 
-  {{#each @model as |critere|}}
-    <h1>
-        {{critere.nom}}
-    </h1>
-        <h2>
-        {{critere.description}}
-    </h2>
-    <span>
-        {{critere.coefficient}}
-    </span>
-  {{/each}}
+  {{#if this.isLoading}}
+    <div class="loading-spinner">
+      <p>Chargement des critères...</p>
+    </div>
+  {{else}}
+    {{#if this.criterias.length}}
+      <div class="criterias-grid">
+        {{#each this.criterias as |criteria|}}
+          <div class="criteria-card">
+            <div class="card-header">
+              <h3>{{criteria.nom}}</h3>
+              <div class="card-actions">
+                <button class="btn btn-sm btn-edit" {{on "click" (fn this.openEditModal criteria)}}>
+                  ✏️ Modifier
+                </button>
+                <button class="btn btn-sm btn-delete" {{on "click" (fn this.deleteCriteria criteria.id)}}>
+                  🗑️ Supprimer
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="description">{{criteria.description}}</p>
+              <div class="criteria-details">
+                <span class="detail-badge">Coefficient: <strong>{{criteria.coefficient}}</strong></span>
+                <span class="detail-badge">ID: <strong>{{criteria.id}}</strong></span>
+              </div>
+              {{#if criteria.data}}
+                <div class="criteria-data">
+                  <p class="data-label">Données additionnelles:</p>
+                  <pre>{{this.stringifyData criteria.data}}</pre>
+                </div>
+              {{/if}}
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="empty-state">
+        <p>Aucun critère trouvé pour ce document.</p>
+        <button class="btn btn-primary" {{on "click" this.openCreateModal}}>
+          Créer le premier critère
+        </button>
+      </div>
+    {{/if}}
+  {{/if}}
+
+  {{#if this.showModal}}
+    <div class="modal-overlay" {{on "click" this.closeModal}}>
+      <div class="modal" {{on "click" (fn this.stopPropagation)}}>
+        <div class="modal-header">
+          <h2>{{if this.isEditMode "Modifier" "Créer"}} un critère</h2>
+          <button class="btn-close" {{on "click" this.closeModal}}>✕</button>
+        </div>
+
+        <form class="modal-form" {{on "submit" (fn this.saveCriteria)}}>
+          <div class="form-group">
+            <label for="nom">Nom *</label>
+            <input
+              type="text"
+              id="nom"
+              class="form-control"
+              value={{this.formData.nom}}
+              {{on "input" (fn this.updateFormData "nom")}}
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              class="form-control"
+              value={{this.formData.description}}
+              {{on "input" (fn this.updateFormData "description")}}
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="coefficient">Coefficient *</label>
+            <input
+              type="number"
+              id="coefficient"
+              class="form-control"
+              value={{this.formData.coefficient}}
+              {{on "input" (fn this.updateFormData "coefficient")}}
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="data">Données JSON (optionnel)</label>
+            <textarea
+              id="data"
+              class="form-control"
+              value={{this.formData.dataString}}
+              {{on "input" (fn this.updateFormData "dataString")}}
+              rows="4"
+              placeholder='{"key": "value"}'
+            ></textarea>
+            {{#if this.formData.dataError}}
+              <p class="error-message">⚠️ {{this.formData.dataError}}</p>
+            {{/if}}
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" {{on "click" this.closeModal}}>
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-primary">
+              {{if this.isEditMode "Mettre à jour" "Créer"}}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {{/if}}
+
+  {{#if this.successMessage}}
+    <div class="alert alert-success">
+      {{this.successMessage}}
+    </div>
+  {{/if}}
+
+  {{#if this.errorMessage}}
+    <div class="alert alert-error">
+      {{this.errorMessage}}
+    </div>
+  {{/if}}
+</div>
