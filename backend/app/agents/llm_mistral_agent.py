@@ -5,7 +5,7 @@ Agent Mistral dédié aux appels directs du modèle Chat Mistral
 import logging
 from app.config import settings
 import json
-
+import re 
 logger = logging.getLogger(__name__)
 
 class LLMMistralAgent:
@@ -121,7 +121,7 @@ Return the response in this exact JSON format:
 REGULATORY TEXT:
 {regulation_chunk}
 
-Extract all reporting criteria that companies must comply with. Remember: return ONLY valid JSON, no markdown or explanations."""
+Extract all reporting criteria that companies must comply with. Remember: return ONLY valid JSON, no markdown or explanations. Returning a valid json is very important"""
 
         try:
             self.llm.temperature = temperature
@@ -145,8 +145,17 @@ Extract all reporting criteria that companies must comply with. Remember: return
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
             response_text = response_text.strip()
+            response_text = re.sub(r'\s+', ' ', response_text).strip()
+            response_text = response_text.replace('\\n', '\\n').replace('\\t', '\\t')
+            response_text = response_text.strip().removeprefix("```json\n").removesuffix("\n```")
+            response_text = response_text.replace('\\n', '\n')
+            response_text = response_text.replace('\\t', '\t')
 
+            print('-------- RESPONSE -------')
+
+            print(response_text)
             # Parse le JSON
+            
             result = json.loads(response_text)
 
             # Validation de la structure
