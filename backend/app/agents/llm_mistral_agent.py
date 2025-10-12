@@ -151,9 +151,7 @@ Extract all reporting criteria that companies must comply with. Remember: return
             response_text = response_text.replace('\\n', '\n')
             response_text = response_text.replace('\\t', '\t')
 
-            print('-------- RESPONSE -------')
 
-            print(response_text)
             # Parse le JSON
             
             result = json.loads(response_text)

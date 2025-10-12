@@ -90,6 +90,11 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         text_content = extract_text_from_file(bytes(file_data), filename)
         print("text_content")
         print(text_content)
+
+        chunks = chunk_text_by_tokens(text_content)
+        print("chunks")
+        print(len(chunks))
+
         # 3. Mettre à jour le statut du document
         cur.execute("""
             UPDATE documents 
@@ -97,17 +102,11 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
                 extracted_text = %s,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        """, ('processing', text_content[:10000], doc_id))  # Limite à 10k caractères
+        """, ('processing', chunks[:10000], doc_id))  # Limite à 10k caractères
         
         conn.commit()
         
-        # 4. Analyser le document avec les agents LLM
         logger.info(f" {doc_id}")
-        
-        # from app.agents.llm_agents import get_analysis_agents
-        
-        # # Créer les agents d'analyse
-        # agents = get_analysis_agents(provider="mistral")  # ou "anthropic", "mistral"
         
         # # Préparer les métadonnées
         metadata = {
@@ -116,18 +115,68 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
             "id": doc_id
         }
         
+        async def analyze_all_chunks():
+            tasks = [run_mistral_analysis(chunk, metadata) for chunk in chunks]
+            return await asyncio.gather(*tasks)
 
-        result = asyncio.run(run_mistral_analysis(text_content, metadata))
+        results = asyncio.run(analyze_all_chunks())
+        print("---------------AKDKKJEZJK")
+        print(results)
+        # result = asyncio.run(run_mistral_analysis(chunks, metadata))
 
         logger.info(f"Analyse Mistral terminée pour le document {doc_id}")
       
-        print(result)
-        print("result")
-        return {
-            "status": "success",
-            "document_id": doc_id,
-            "mistral_output": result
-        }
+        #print(result)
+        logger.info(f"Analyse Mistral terminée pour le document {doc_id}")
+
+        try:
+            # Keep connection open throughout the entire operation
+            cur.execute("""
+                UPDATE documents 
+                SET analysis_status = %s, 
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, ('completed', doc_id))
+            
+            conn.commit()
+            
+            # Process results - connection still open
+            for result_item in results:
+                criteria_data = result_item.get("criterias", [])
+                for criterion in criteria_data:
+                    try:
+                        cur.execute("""
+                            INSERT INTO criterias (document_id, nom, description, coefficient, created_at, updated_at)
+                            VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """, (
+                            doc_id,
+                            criterion.get("name"),
+                            criterion.get("description"),
+                            criterion.get("coefficient")
+                        ))
+                        print(f"Critère sauvegardé: {criterion.get('name')}")
+                        conn.commit()
+                    except Exception as e:
+                        print(f"Erreur lors de la sauvegarde du critère '{criterion.get('name')}': {str(e)}")
+                        conn.rollback()
+            
+            print(f"Total de {len(criteria_data)} critères traités")
+            
+            return {
+                "status": "success",
+                "document_id": doc_id,
+                "mistral_output": results
+            }
+
+        except Exception as e:
+            print(f"Erreur lors de l'analyse du document {doc_id}: {str(e)}")
+            conn.rollback()
+            raise
+
+        finally:
+            # Close connection only once, at the very end
+            cur.close()
+            conn.close()
 
 
 
@@ -143,35 +192,8 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
         #     "agents_results": agents_result
         # }
         
-        # # 5. Sauvegarder les résultats de l'analyse
-        # cur.execute("""
-        #     UPDATE documents 
-        #     SET analysis_status = %s, 
-        #         analysis_results = %s,
-        #         updated_at = CURRENT_TIMESTAMP
-        #     WHERE id = %s
-        # """, ('completed', str(analysis_result), doc_id))
-        
-        # conn.commit()
-        # cur.close()
-        # conn.close()
-        
-        # logger.info(f"Analyse du document {doc_id} terminée avec succès")
-        # return analysis_result
 
 
-        # from app.agents.llm_document_agents import get_criteria_extractor
-        # extractor = get_criteria_extractor(provider="mistral", tier="powerful")
-        # result = extractor.extract_criteria_from_regulation(
-        #     regulation_text=text_content,
-        #     document_metadata=metadata
-        # )
-        # from app.agents.llm_document_soft_agents import get_criteria_extractor
-        # extractor = get_criteria_extractor(provider="mistral", tier="balanced")  # "balanced" recommandé
-        # result = extractor.extract_criteria_from_regulation(
-        #     regulation_text=text_content,
-        #     document_metadata=metadata
-        # )
         # print("ANALLLLLYSE TERMINEEEEEEEEEE")
         # print(result)
         # if result["status"] == "success":
@@ -259,3 +281,38 @@ async def run_mistral_analysis(text_content: str, metadata: dict) -> str:
     print(response)
     return response
 
+
+def chunk_text_by_tokens(text: str, chunk_size: int = 8000) -> list[str]:
+    """
+    Divise un texte en chunks d'environ chunk_size tokens (approximatif).
+    Utilise une estimation simple: 1 token ≈ 4 caractères.
+    
+    Args:
+        text: Le texte à chunker
+        chunk_size: Nombre approximatif de tokens par chunk (défaut: 8000)
+        
+    Returns:
+        Liste de chunks de texte
+    """
+    # Estimation: 1 token ≈ 4 caractères
+    char_size = chunk_size * 4
+    
+    chunks = []
+    start = 0
+    
+    while start < len(text):
+        end = min(start + char_size, len(text))
+        
+        # Si on n'est pas à la fin, chercher le dernier espace pour ne pas couper les mots
+        if end < len(text):
+            last_space = text.rfind(' ', start, end)
+            if last_space > start:
+                end = last_space
+        
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        
+        start = end + 1
+    
+    return chunks
