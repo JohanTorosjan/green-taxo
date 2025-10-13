@@ -134,7 +134,8 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
             cur.execute("""
                 UPDATE documents 
                 SET analysis_status = %s, 
-                    updated_at = CURRENT_TIMESTAMP
+                    updated_at = CURRENT_TIMESTAMP,
+                    used=true
                 WHERE id = %s
             """, ('completed', doc_id))
             

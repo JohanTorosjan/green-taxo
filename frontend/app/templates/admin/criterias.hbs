@@ -1,7 +1,7 @@
 <div class="criterias-container">
   <div class="criterias-header">
     <h1>Gestion des Critères</h1>
-    <button class="btn btn-primary" {{on "click" this.openCreateModal}}>
+    <button class="btn btn-primary" type="button" {{on "click" this.openCreateModal}}>
       + Ajouter un critère
     </button>
   </div>
@@ -18,10 +18,10 @@
             <div class="card-header">
               <h3>{{criteria.nom}}</h3>
               <div class="card-actions">
-                <button class="btn btn-sm btn-edit" {{on "click" (fn this.openEditModal criteria)}}>
+                <button class="btn btn-sm btn-edit" type="button" {{on "click" (fn this.openEditModal criteria)}}>
                   ✏️ Modifier
                 </button>
-                <button class="btn btn-sm btn-delete" {{on "click" (fn this.deleteCriteria criteria.id)}}>
+                <button class="btn btn-sm btn-delete" type="button" {{on "click" (fn this.deleteCriteria criteria.id)}}>
                   🗑️ Supprimer
                 </button>
               </div>
@@ -45,7 +45,7 @@
     {{else}}
       <div class="empty-state">
         <p>Aucun critère trouvé pour ce document.</p>
-        <button class="btn btn-primary" {{on "click" this.openCreateModal}}>
+        <button class="btn btn-primary" type="button" {{on "click" this.openCreateModal}}>
           Créer le premier critère
         </button>
       </div>
@@ -54,13 +54,13 @@
 
   {{#if this.showModal}}
     <div class="modal-overlay" {{on "click" this.closeModal}}>
-      <div class="modal" {{on "click" (fn this.stopPropagation)}}>
+      <div class="modal" {{on "click" this.stopPropagation}}>
         <div class="modal-header">
           <h2>{{if this.isEditMode "Modifier" "Créer"}} un critère</h2>
-          <button class="btn-close" {{on "click" this.closeModal}}>✕</button>
+          <button class="btn-close" type="button" {{on "click" this.closeModal}}>✕</button>
         </div>
 
-        <form class="modal-form" {{on "submit" (fn this.saveCriteria)}}>
+        <form class="modal-form" {{on "submit" this.saveCriteria}}>
           <div class="form-group">
             <label for="nom">Nom *</label>
             <input

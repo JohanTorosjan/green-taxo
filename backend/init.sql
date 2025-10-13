@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS documents (
     extracted_text TEXT,
     analysis_results TEXT,
     task_id VARCHAR(255),
+    used BOOLEAN DEFAULT FALSE,
     
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS criterias (
     description TEXT,
     coefficient INTEGER,
     data JSONB,
+    used BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

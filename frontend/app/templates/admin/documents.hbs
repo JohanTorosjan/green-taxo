@@ -1,62 +1,177 @@
-<h2>Documents</h2>
+<div class="documents-container">
+  <div class="documents-header">
+    <h1>Documents</h1>
+    <button type="button" class="btn btn-primary" {{on "click" this.openModal}}>
+      + Import new document
+    </button>
+  </div>
 
-<button type="button" {{on "click" this.openModal}}>
-  Ajouter un document
-</button>
+  {{#if this.documents.length}}
+    <div class="documents-table">
+      <div class="table-header">
+        <div class="col-checkbox">Used in computation</div>
+        <div class="col-name">Name</div>
+        <div class="col-date">Date</div>
+        <div class="col-status">Status</div>
+        <div class="col-actions">Actions</div>
+      </div>
 
-<ul>
-  {{#each this.documents as |doc|}}
-    <li>
-      <strong>{{doc.name}}</strong> 
-      (date: {{doc.doc_date}}) 
-      — créé le {{doc.created_at}}
+      {{#each this.documents as |doc|}}
+        <div class="table-row {{if (not doc.used) 'row-unused'}}">
+          <div class="col-checkbox">
+            <input 
+              type="checkbox" 
+              checked={{doc.used}}
+              {{on "change" (fn this.toggleDocumentUsed doc)}}
+              aria-label="Utiliser ce document"
+            />
+          </div>
 
-      <button type="button" {{on "click" (fn this.downloadDocument doc.id doc.name)}}>
-        Télécharger
-      </button>
+          <div class="col-name">
+            <span class="doc-name">{{doc.name}}</span>
+            <span class="doc-created">{{doc.created_at}}</span>
+          </div>
 
-      {{#if (eq doc.analysis_status "completed")}}
-        <button type="button" {{on "click" (fn this.openAnalysis doc)}} class="btn-analysis">
-          📊 Voir l'analyse
-        </button>
-      {{else if (eq doc.analysis_status "processing")}}
-        <span class="status-pending">⏳ Analyse en cours...</span>
-        {{else if (eq doc.analysis_status "pending")}}
-        <span class="status-pending">⏳ Lancement de l'analyse...</span>
-      {{else}}
-        <span class="status-error">❌ Erreur d'analyse</span>
-      {{/if}}
-      
-    </li>
+          <div class="col-date">
+            <span class="date-value">{{doc.doc_date}}</span>
+          </div>
+
+          <div class="col-status">
+            {{#if (eq doc.analysis_status "completed")}}
+              <span class="status-badge status-completed">✓ Completed</span>
+            {{else if (eq doc.analysis_status "processing")}}
+              <span class="status-badge status-processing">⏳ Processing</span>
+            {{else if (eq doc.analysis_status "pending")}}
+              <span class="status-badge status-pending">⏱️ Pending</span>
+            {{else}}
+              <span class="status-badge status-error">❌ Error</span>
+            {{/if}}
+          </div>
+
+          <div class="col-actions">
+            <button 
+              type="button" 
+              class="btn btn-icon btn-download" 
+              {{on "click" (fn this.downloadDocument doc.id doc.name)}}
+              title="Download"
+            >
+              Download
+            </button>
+
+            {{#if (eq doc.analysis_status "completed")}}
+              <button 
+                type="button" 
+                class="btn btn-icon btn-analysis" 
+                {{on "click" (fn this.openAnalysis doc)}}
+                title="Edit criterias"
+              >
+                Edit Criterias
+              </button>
+            {{/if}}
+
+            <button 
+              type="button" 
+              class="btn btn-icon btn-delete" 
+              {{on "click" (fn this.openDeleteModal doc)}}
+              title="Delete"
+            >
+              🗑️
+            </button>
+          </div>
+        </div>
+      {{/each}}
+    </div>
   {{else}}
-    <li>Aucun document pour l'instant</li>
-  {{/each}}
-</ul>
+    <div class="empty-state">
+      <span class="empty-icon">📭</span>
+      <p>Aucun document pour l'instant</p>
+      <p class="empty-hint">Commencez en ajoutant votre premier document</p>
+    </div>
+  {{/if}}
 
-{{#if this.isModalOpen}}
-  <div class="modal-backdrop">
-    <div class="modal">
-      <h3>Importer un document</h3>
+  {{!-- Modal to add document --}}
+  {{#if this.isModalOpen}}
+    <div class="modal-backdrop" {{on "click" this.closeModal}}>
+      <div class="modal" {{on "click" this.stopPropagation}}>
+        <div class="modal-header">
+          <h2>Import Document</h2>
+          <button type="button" class="btn-close" {{on "click" this.closeModal}}>×</button>
+        </div>
 
-      <div class="form-group">
-        <label>Nom du document :</label>
-        <input type="text" {{on "input" this.updateName}} value={{this.documentName}} />
-      </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Document Name *</label>
+            <input 
+              type="text" 
+              placeholder="Enter the document name"
+              {{on "input" this.updateName}} 
+              value={{this.documentName}} 
+            />
+          </div>
 
-      <div class="form-group">
-        <label>Date :</label>
-        <input type="date" {{on "input" this.updateDate}} value={{this.documentDate}} />
-      </div>
+          <div class="form-group">
+            <label>Date *</label>
+            <input 
+              type="date" 
+              {{on "input" this.updateDate}} 
+              value={{this.documentDate}} 
+            />
+          </div>
 
-      <div class="form-group">
-        <label>Fichier (PDF uniquement) :</label>
-        <input type="file" accept="application/pdf" {{on "change" this.handleFileChange}} />
-      </div>
-      
-      <div class="actions">
-        <button type="button" {{on "click" this.uploadFile}}>Importer</button>
-        <button type="button" {{on "click" this.closeModal}}>Annuler</button>
+          <div class="form-group">
+            <label>PDF File *</label>
+            <div class="file-input-wrapper">
+              <input 
+                type="file" 
+                accept="application/pdf" 
+                {{on "change" this.handleFileChange}}
+                id="file-input"
+              />
+              <label for="file-input" class="file-label">
+                {{#if this.selectedFile}}
+                  ✓ {{this.selectedFile.name}}
+                {{else}}
+                  📎 Choose a PDF file
+                {{/if}}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" {{on "click" this.closeModal}}>
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" {{on "click" this.uploadFile}}>
+            Import
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-{{/if}}
+  {{/if}}
+
+  {{!-- Modal to confirm deletion --}}
+  {{#if this.isDeleteModalOpen}}
+    <div class="modal-backdrop" {{on "click" this.closeDeleteModal}}>
+      <div class="modal modal-danger" {{on "click" this.stopPropagation}}>
+        <div class="modal-header">
+          <h2>🗑️ Delete Document</h2>
+        </div>
+
+        <div class="modal-body">
+          <p>Are you sure you want to delete the document <strong>{{this.documentToDelete.name}}</strong> ?</p>
+          <p class="warning-text">This action is irreversible.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" {{on "click" this.closeDeleteModal}}>
+            Cancel
+          </button>
+          <button type="button" class="btn btn-danger" {{on "click" this.deleteDocument}}>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  {{/if}}
+</div>
