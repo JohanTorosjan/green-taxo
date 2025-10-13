@@ -162,7 +162,6 @@
   color: #4b5563;
   font-size: 14px;
   line-height: 1.5;
-  max-height: 60px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -405,7 +404,6 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
   .criterias-container {
     padding: 16px;
   }
@@ -446,4 +444,3 @@
   .modal {
     max-height: 95vh;
   }
-}

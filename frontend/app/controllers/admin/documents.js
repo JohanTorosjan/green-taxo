@@ -171,7 +171,7 @@ export default class AdminDocumentsController extends Controller {
 
   @action openAnalysis(doc) {
     console.log("Ouverture de l'analyse pour:", doc);
-    this.router.transitionTo('criterias', {
+    this.router.transitionTo('admin.criterias', {
       queryParams: { id: doc.id },
     });
     // Ici vous pourrez implémenter l'ouverture d'une vue détaillée de l'analyse
