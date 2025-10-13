@@ -77,7 +77,7 @@ async def get_all_documents():
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         cur.execute("""
-            SELECT id, name, doc_date, analysis_status, task_id, created_at, updated_at
+            SELECT id, name, doc_date, analysis_status, task_id, created_at, updated_at, used
             FROM documents
             ORDER BY created_at DESC
         """)
@@ -179,3 +179,51 @@ async def get_criterias(doc_id):
     except Exception as e:
         logger.error(f"Erreur lors de la récupération de l'analyse : {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
+
+
+async def toggle_used(doc_id: int, used: bool):
+    """
+    Met à jour le statut 'used' d'un document
+    
+    Args:
+        doc_id: ID du document à mettre à jour
+        used: Nouveau statut (True/False)
+    
+    Returns:
+        Dict contenant les informations du document mis à jour
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Vérifier que le document existe
+        cur.execute("SELECT id FROM documents WHERE id = %s", (doc_id,))
+        if cur.fetchone() is None:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=404, detail="Document non trouvé")
+        
+        # Mise à jour du champ 'used'
+        cur.execute("""
+            UPDATE documents 
+            SET used = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+            RETURNING id, name, doc_date, analysis_status, used, created_at, updated_at
+        """, (used, doc_id))
+        
+        updated_doc = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": f"Document {doc_id} mis à jour avec succès",
+            "document": updated_doc
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour : {str(e)}")
+

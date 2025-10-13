@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form,Body
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.services.documents import (
@@ -6,7 +6,8 @@ from app.services.documents import (
     get_all_documents, 
     download_single_document,
     get_document_analysis,
-    get_criterias
+    get_criterias,
+    toggle_used
 )
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -165,7 +166,7 @@ async def download_document(doc_id: int):
     
 
 @app.get("/criterias/{doc_id}")
-async def download_document(doc_id: int):
+async def criterias(doc_id: int):
     """
     Recupere tout les critères d'un documents
     """
@@ -176,3 +177,19 @@ async def download_document(doc_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la recuperation des critères : {str(e)}")
+    
+
+
+
+
+@app.patch("/api/documents/{doc_id}")
+async def update_document(doc_id: int, update_data: dict = Body(...)):
+    """
+    Met à jour les propriétés d'un document (actuellement: statut 'used')
+    """
+    used = update_data.get("used")
+    
+    if used is None:
+        return {"success": False, "message": "Aucune modification fournie"}
+    
+    return await toggle_used(doc_id, used)
