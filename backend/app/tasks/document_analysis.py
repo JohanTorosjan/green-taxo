@@ -4,7 +4,7 @@ from app.config import settings
 import psycopg2
 import logging
 from io import BytesIO
-from typing import Dict, Any
+from typing import Dict, Any,List
 import PyPDF2
 import docx
 
@@ -335,13 +335,13 @@ async def run_mistral_repport_analysis(text_content: str, metadata: dict) -> str
 
 
 
-@celery_app.task(base=DocumentAnalysisTask, bind=True, name='app.tasks.analyze_document')
+@celery_app.task(base=DocumentAnalysisTask, bind=True, name='app.tasks.analyze_repport')
 def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
     """
-    Tâche asynchrone pour analyser un document avec des agents LLM
+    Tâche asynchrone pour analyser un rapport avec des agents LLM
     
     Args:
-        doc_id: ID du document à analyser
+        doc_id: ID du rapport à analyser
         
     Returns:
         Dict avec les résultats de l'analyse
@@ -381,10 +381,9 @@ def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
         cur.execute("""
             UPDATE analysis 
             SET analysis_status = %s, 
-                extracted_text = %s,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        """, ('processing', chunks[:10000], doc_id))  # Limite à 10k caractères
+        """, ('processing', doc_id))  
         
         conn.commit()
         
@@ -396,9 +395,12 @@ def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
             "date": str(doc_date),
             "id": doc_id
         }
-        
+        calculation_model = get_calculation_model()
+        print("calculation_model")
+
+        print(calculation_model)
         async def analyze_all_chunks():
-            tasks = [run_mistral_repport_analysis(chunk, metadata) for chunk in chunks]
+            tasks = [run_mistral_repport_analysis(chunk, metadata,) for chunk in chunks]
             return await asyncio.gather(*tasks)
 
         results = asyncio.run(analyze_all_chunks())
@@ -433,3 +435,74 @@ def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
         
         raise self.retry(exc=e, countdown=60)  # Retry après 60 secondes
     
+def get_calculation_model() -> List[Dict[str, Any]]:
+    """
+    Récupère une liste de critères sélectionnés parmi tous les documents 
+    et critères où 'used' est à True.
+    
+    Returns:
+        List[Dict]: Liste des critères actifs avec leurs informations
+        
+    Example:
+        [
+            {
+                "id": 1,
+                "document_id": 5,
+                "document_name": "Report Q1",
+                "nom": "Critère 1",
+                "description": "Description du critère",
+                "coefficient": 2,
+                "data": {"key": "value"}
+            },
+            ...
+        ]
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Requête pour récupérer les critères actifs liés à des documents actifs
+        cur.execute("""
+            SELECT 
+                c.id,
+                c.document_id,
+                d.name as document_name,
+                c.nom,
+                c.description,
+                c.coefficient,
+                c.data
+            FROM criterias c
+            INNER JOIN documents d ON c.document_id = d.id
+            WHERE c.used = TRUE 
+                AND d.used = TRUE
+            ORDER BY d.id, c.id
+        """)
+        
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        if not rows:
+            logger.warning("Aucun critère actif trouvé")
+            return []
+        
+        # Transformer les résultats en dictionnaire
+        calculation_model = []
+        for row in rows:
+            criteria = {
+                "id": row[0],
+                "document_id": row[1],
+                "document_name": row[2],
+                "nom": row[3],
+                "description": row[4],
+                "coefficient": row[5],
+                "data": row[6] if row[6] else {}
+            }
+            calculation_model.append(criteria)
+        
+        logger.info(f"Modèle de calcul chargé avec {len(calculation_model)} critères")
+        return calculation_model
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération du modèle de calcul: {str(e)}")
+        return []

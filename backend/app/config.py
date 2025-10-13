@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 
-
+    
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://greentaxo:changeme@db:5432/greentaxo_db"
     REDIS_URL: str = "redis://redis:6379/0"

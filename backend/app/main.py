@@ -123,6 +123,8 @@ async def create_document(
     Upload un document et déclenche automatiquement l'analyse LLM en arrière-plan
     """
     try:
+        print('document')
+
         result = await upload_documents(name, doc_date, file)
         return result
     except Exception as e:
@@ -208,6 +210,7 @@ async def create_analysis(
     Upload un rapport et déclenche automatiquement l'analyse LLM en arrière-plan
     """
     try:
+        print('upload_analysis')
         result = await upload_analysis(name, doc_date, file)
         return result
     except Exception as e:

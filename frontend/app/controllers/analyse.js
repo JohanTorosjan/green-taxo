@@ -70,7 +70,7 @@ export default class AnalyseController extends Controller {
   }
 
   @action
-  handleSubmit(event) {
+  async handleSubmit(event) {
     event.preventDefault();
 
     // Créer l'objet avec toutes les infos
@@ -98,6 +98,26 @@ export default class AnalyseController extends Controller {
       entreprise: documentData.companyName
     });
 
+        try {
+                let formData = new FormData();
+    formData.append("name", this.documentName);
+    formData.append("doc_date", this.documentDate);
+    formData.append("file", this.selectedFile);
+
+      console.log("📤 Envoi du rapport...");
+      let response = await fetch("http://localhost:8000/api/analysis", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) throw new Error(`Erreur API: ${response.statusText}`);
+      let data = await response.json();
+      console.log("✅ rapport créé :", data);
+
+    } catch (err) {
+      console.error("❌ Erreur lors de l'upload :", err);
+      alert("Erreur lors de l'upload du document !");
+    }
     // Fermer la modale et réinitialiser
     this.showModal = false;
     this.selectedFile = null;
@@ -112,7 +132,8 @@ export default class AnalyseController extends Controller {
       fileInput.value = '';
     }
 
+
     // Message de confirmation
-    alert('Document analysé avec succès ! Consultez la console pour voir les détails.');
+    alert('Document envoye avec succès ! Consultez la console pour voir les détails.');
   }
 }
