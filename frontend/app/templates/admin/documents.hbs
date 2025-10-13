@@ -17,7 +17,7 @@
       </div>
 
       {{#each this.documents as |doc|}}
-        <div class="table-row {{if (not doc.used) 'row-unused'}}">
+        <div class="table-row {{unless doc.used 'row-unused'}}">
           <div class="col-checkbox">
             <input 
               type="checkbox" 
@@ -83,9 +83,9 @@
     </div>
   {{else}}
     <div class="empty-state">
-      <span class="empty-icon">📭</span>
-      <p>Aucun document pour l'instant</p>
-      <p class="empty-hint">Commencez en ajoutant votre premier document</p>
+      <span class="empty-icon"></span>
+      <p>No documents for now</p>
+      <p class="empty-hint">You can start by uploading a document </p>
     </div>
   {{/if}}
 
@@ -99,6 +99,24 @@
         </div>
 
         <div class="modal-body">
+                    <div class="form-group">
+            <label>PDF File *</label>
+            <div class="file-input-wrapper">
+              <input 
+                type="file" 
+                accept="application/pdf" 
+                {{on "change" this.handleFileChange}}
+                id="file-input"
+              />
+              <label for="file-input" class="file-label">
+                {{#if this.selectedFile}}
+                  ✓ {{this.selectedFile.name}}
+                {{else}}
+                  📎 Choose a PDF file
+                {{/if}}
+              </label>
+            </div>
+          </div>
           <div class="form-group">
             <label>Document Name *</label>
             <input 
@@ -118,24 +136,7 @@
             />
           </div>
 
-          <div class="form-group">
-            <label>PDF File *</label>
-            <div class="file-input-wrapper">
-              <input 
-                type="file" 
-                accept="application/pdf" 
-                {{on "change" this.handleFileChange}}
-                id="file-input"
-              />
-              <label for="file-input" class="file-label">
-                {{#if this.selectedFile}}
-                  ✓ {{this.selectedFile.name}}
-                {{else}}
-                  📎 Choose a PDF file
-                {{/if}}
-              </label>
-            </div>
-          </div>
+
         </div>
 
         <div class="modal-footer">

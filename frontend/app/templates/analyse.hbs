@@ -1,0 +1,115 @@
+{{page-title "Analyse de documents"}}
+
+<div class="analyse-page">
+  <div class="analyse-header">
+    <h1 class="analyse-title">Analyse de documents</h1>
+    <p class="analyse-description">
+      Importez un document PDF pour l'analyser automatiquement. 
+      Le système extraira les informations clés et vous permettra de compléter les données manquantes.
+    </p>
+  </div>
+
+  <div class="upload-zone">
+    <input
+      type="file"
+      id="file-input"
+      accept=".pdf,application/pdf"
+      class="file-input"
+      {{on "change" this.handleFileSelect}}
+    />
+    <label for="file-input" class="upload-label">
+      <svg class="upload-icon" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+      </svg>
+      <span class="upload-text">Cliquez pour sélectionner un fichier PDF</span>
+      <span class="upload-subtext">ou glissez-déposez votre fichier ici</span>
+      {{#if this.selectedFileName}}
+        <span class="selected-file">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+          </svg>
+          {{this.selectedFileName}}
+        </span>
+      {{/if}}
+    </label>
+  </div>
+</div>
+
+{{#if this.showModal}}
+  <div class="modal-overlay" {{on "click" this.closeModal}}>
+    <div class="modal-content" {{on "click" this.stopPropagation}}>
+      <div class="modal-header">
+        <h2 class="modal-title">Confirmer les informations du document</h2>
+        <button type="button" class="modal-close" {{on "click" this.closeModal}} aria-label="Fermer">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-description">
+          Veuillez vérifier et compléter les informations extraites du document avant de continuer.
+        </p>
+
+        <form {{on "submit" this.handleSubmit}} class="modal-form">
+          <div class="form-group">
+            <label for="doc-name" class="form-label">
+              Nom du document
+              <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="doc-name"
+              class="form-input"
+              value={{this.documentName}}
+              {{on "input" (fn this.updateField "documentName")}}
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="doc-date" class="form-label">
+              Date
+              <span class="required">*</span>
+            </label>
+            <input
+              type="date"
+              id="doc-date"
+              class="form-input"
+              value={{this.documentDate}}
+              {{on "input" (fn this.updateField "documentDate")}}
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="company-name" class="form-label">
+              Entreprise
+              <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="company-name"
+              class="form-input"
+              placeholder="Nom de l'entreprise"
+              value={{this.companyName}}
+              {{on "input" (fn this.updateField "companyName")}}
+              required
+            />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" {{on "click" this.closeModal}}>
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Confirmer et analyser
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{{/if}}

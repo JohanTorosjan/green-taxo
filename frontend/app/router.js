@@ -13,4 +13,5 @@ Router.map(function () {
     this.route('criterias');
 
   });
+  this.route('analyse');
 });
