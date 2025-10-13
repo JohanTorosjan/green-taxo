@@ -70,3 +70,19 @@ CREATE TABLE IF NOT EXISTS criterias (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
+
+
+
+CREATE TABLE IF NOT EXISTS analysis (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    doc_date DATE NOT NULL,
+    file_data BYTEA NOT NULL,
+    
+    -- Champs pour l'analyse LLM
+    analysis_status VARCHAR(50) DEFAULT 'pending',
+    task_id VARCHAR(255),
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

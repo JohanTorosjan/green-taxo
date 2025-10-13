@@ -7,8 +7,12 @@ from app.services.documents import (
     download_single_document,
     get_document_analysis,
     get_criterias,
-    toggle_used
+    toggle_used,
 )
+from app.services.analysis import(
+        upload_analysis
+)
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
@@ -193,3 +197,18 @@ async def update_document(doc_id: int, update_data: dict = Body(...)):
         return {"success": False, "message": "Aucune modification fournie"}
     
     return await toggle_used(doc_id, used)
+
+@app.post("/api/analysis")
+async def create_analysis(
+    name: str = Form(...),
+    doc_date: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """
+    Upload un rapport et déclenche automatiquement l'analyse LLM en arrière-plan
+    """
+    try:
+        result = await upload_analysis(name, doc_date, file)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")

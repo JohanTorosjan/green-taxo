@@ -317,3 +317,119 @@ def chunk_text_by_tokens(text: str, chunk_size: int = 8000) -> list[str]:
         start = end + 1
     
     return chunks
+
+
+
+
+async def run_mistral_repport_analysis(text_content: str, metadata: dict) -> str:
+    """
+    Fonction asynchrone appelée par Celery via asyncio.run()
+    """
+    agent = LLMMistralAgent(model="mistral-medium-latest")
+
+
+    response = await agent.analyseRepport(text_content, temperature=0.2)
+    print("response de ici")
+    print(response)
+    return response
+
+
+
+@celery_app.task(base=DocumentAnalysisTask, bind=True, name='app.tasks.analyze_document')
+def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
+    """
+    Tâche asynchrone pour analyser un document avec des agents LLM
+    
+    Args:
+        doc_id: ID du document à analyser
+        
+    Returns:
+        Dict avec les résultats de l'analyse
+    """
+    logger.info(f"Début de l'analyse du rapport {doc_id}")
+    
+    try:
+        # 1. Récupérer le document depuis la DB
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT id, name, doc_date, file_data
+            FROM analysis
+            WHERE id = %s
+        """, (doc_id,))
+        
+        row = cur.fetchone()
+        
+        if not row:
+            logger.error(f"rapport {doc_id} non trouvé")
+            return {"status": "error", "message": "rapport not found"}
+        
+        doc_id_db, filename, doc_date, file_data = row
+        
+        # 2. Extraire le texte du document
+        logger.info(f"Extraction du texte du rapport {filename}")
+        text_content = extract_text_from_file(bytes(file_data), filename)
+        print("text_content")
+        print(text_content)
+
+        chunks = chunk_text_by_tokens(text_content)
+        print("chunks")
+        print(len(chunks))
+
+        # 3. Mettre à jour le statut du document
+        cur.execute("""
+            UPDATE analysis 
+            SET analysis_status = %s, 
+                extracted_text = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, ('processing', chunks[:10000], doc_id))  # Limite à 10k caractères
+        
+        conn.commit()
+        
+        logger.info(f" {doc_id}")
+        
+        # # Préparer les métadonnées
+        metadata = {
+            "name": filename,
+            "date": str(doc_date),
+            "id": doc_id
+        }
+        
+        async def analyze_all_chunks():
+            tasks = [run_mistral_repport_analysis(chunk, metadata) for chunk in chunks]
+            return await asyncio.gather(*tasks)
+
+        results = asyncio.run(analyze_all_chunks())
+        print("---------------AKDKKJEZJK")
+        print(results)
+        # result = asyncio.run(run_mistral_analysis(chunks, metadata))
+
+        logger.info(f"Analyse Mistral terminée pour le rapport {doc_id}")
+      
+        #print(result)
+        logger.info(f"Analyse Mistral terminée pour le rapport {doc_id}")
+
+      
+    except Exception as e:
+        logger.error(f"Erreur lors de l'analyse du document {doc_id}: {str(e)}")
+        
+        # Mettre à jour le statut en cas d'erreur
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE documents 
+                SET analysis_status = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, ('failed_2', doc_id))
+            conn.commit()
+            cur.close()
+            conn.close()
+        except:
+            pass
+        
+        raise self.retry(exc=e, countdown=60)  # Retry après 60 secondes
+    
