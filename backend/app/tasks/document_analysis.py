@@ -415,13 +415,23 @@ def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
         print(results)
         print('analysis score-----')
         merged_results = []
+        results_by_name = {}
+
         for chunk_result in results:
             if isinstance(chunk_result, dict) and 'analysisResults' in chunk_result:
-                merged_results.extend(chunk_result['analysisResults'])
+                for result in chunk_result['analysisResults']:
+                    name = result['name']
+                    # Si le critère n'existe pas encore OU si on trouve un 'present': True
+                    if name not in results_by_name or result.get('present', False):
+                        results_by_name[name] = result
 
+        # Convertir en liste
+        merged_results = list(results_by_name.values())
 
-        analysis_score = calcul_analysis_score(calculation_model=calculation_model,results=merged_results)
-        
+        analysis_score = calcul_analysis_score(
+            calculation_model=calculation_model,
+            results=merged_results
+)
         # result = asyncio.run(run_mistral_analysis(chunks, metadata))
         success = save_analysis_results(
             doc_id=doc_id,

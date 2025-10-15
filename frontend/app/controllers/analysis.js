@@ -9,7 +9,7 @@ export default class AnalysisDetailController extends Controller {
   
   @tracked isLoading = false;
   @tracked error = null;
-  @tracked expandedCriteria = new Set();
+@tracked expandedCriteria = [];
 
   get scorePercentage() {
     const analysis = this.model;
@@ -51,21 +51,19 @@ export default class AnalysisDetailController extends Controller {
       };
     });
   }
-
   @action
   toggleCriteria(criteriaName) {
-    if (this.expandedCriteria.has(criteriaName)) {
-      this.expandedCriteria.delete(criteriaName);
+    if (this.expandedCriteria.includes(criteriaName)) {
+      this.expandedCriteria = this.expandedCriteria.filter(name => name !== criteriaName);
     } else {
-      this.expandedCriteria.add(criteriaName);
+      this.expandedCriteria = [...this.expandedCriteria, criteriaName];
     }
   }
 
   @action
   isCriteriaExpanded(criteriaName) {
-    return this.expandedCriteria.has(criteriaName);
-  }
-
+    return this.expandedCriteria.includes(criteriaName);
+  } 
   @action
   goBack() {
     this.router.transitionTo('analysis.list');
