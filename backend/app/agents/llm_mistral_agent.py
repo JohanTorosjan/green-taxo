@@ -99,7 +99,7 @@ A criterion consists of:
 
 IMPORTANT INSTRUCTIONS:
 1. Extract only explicit criteria from the provided text
-2. There may be 0 to 3 criteria per text chunk - this is normal
+2. There may be 0 to 1 criteria per text chunk - this is normal
 3. Only return valid criteria that directly relate to corporate report compliance requirements
 4. Return ONLY a valid JSON object, no markdown formatting, no code blocks, no additional text
 5. The response must be parseable as pure JSON

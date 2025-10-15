@@ -18,23 +18,50 @@
 
   <!-- Score Card -->
   <div class="score-card {{this.scoreClass}}">
-    <div class="score-circle">
-      <div class="score-number">{{this.scorePercentage}}</div>
-      <div class="score-label">/100</div>
-      <div class="score-ring"></div>
-    </div>
     
-    <div class="score-details">
-      <h2>Compliance Score</h2>
-      <p class="score-description">
-        {{this.satisfiedCriteriaCount}} criteria met out of {{this.criteriaCount}}
-      </p>
-      
-      <div class="status-badge {{@model.analysis_status}}">
-        <span class="badge-icon">✓</span>
-        {{@model.analysis_status}}
+    {{#if this.isProcessing}}
+      <!-- Spinner for pending/processing -->
+      <div class="spinner-container">
+        
+        <div class="spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <h2 class="spinner-title">Analysis in Progress</h2>
+        <p class="spinner-text">
+          {{#if (eq this.analysisStatus "pending")}}
+            Your document is queued for analysis...
+          {{else}}
+            Processing your document...
+          {{/if}}
+        </p>
+        <div class="status-badge {{this.analysisStatus}}">
+          <span class="badge-icon">⏳</span>
+          {{this.analysisStatus}}
+        </div>
       </div>
-    </div>
+    {{else}}
+      <!-- Normal score display -->
+      <div class="score-circle">
+        <div class="score-number">{{this.scorePercentage}}</div>
+        <div class="score-label">/100</div>
+        <div class="score-ring"></div>
+      </div>
+      
+      <div class="score-details">
+        <h2>Compliance Score</h2>
+        <p class="score-description">
+          {{this.satisfiedCriteriaCount}} criteria met out of {{this.criteriaCount}}
+        </p>
+        
+        <div class="status-badge {{this.analysisStatus}}">
+          <span class="badge-icon">✓</span>
+          {{this.analysisStatus}}
+        </div>
+      </div>
+    {{/if}}
+
   </div>
 
   <!-- Stats -->
@@ -56,8 +83,8 @@
     <div class="stat-card">
       <div class="stat-content">
         <div class="stat-value">
-          {{#if @model.score}}
-            {{@model.score}}%
+          {{#if this.analysisScore}}
+            {{this.analysisScore}}%
           {{else}}
             -
           {{/if}}
@@ -155,9 +182,9 @@
       
       <div class="metadata-item">
         <span class="metadata-label">Status</span>
-        <span class="status-badge {{@model.analysis_status}}">
+        <span class="status-badge {{this.analysisStatus}}">
           <span class="badge-icon">✓</span>
-          {{@model.analysis_status}}
+          {{this.analysisStatus}}
         </span>
       </div>
       
@@ -180,6 +207,7 @@
     </div>
   </div>
 </div>
+
 <style scoped>
   * {
     box-sizing: border-box;
@@ -317,6 +345,11 @@
     box-shadow: 0 20px 40px rgba(239, 68, 68, 0.3);
   }
 
+  .score-card.loading {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+  }
+
   .score-circle {
     position: relative;
     display: flex;
@@ -410,6 +443,82 @@
 
   .status-badge.completed {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  .status-badge.pending,
+  .status-badge.processing {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Spinner Styles */
+  .spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .spinner {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 32px;
+  }
+
+  .spinner-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid transparent;
+    border-top-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  }
+
+  .spinner-ring:nth-child(2) {
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border-top-color: rgba(255, 255, 255, 0.6);
+    animation-duration: 2s;
+    animation-direction: reverse;
+  }
+
+  .spinner-ring:nth-child(3) {
+    width: 60%;
+    height: 60%;
+    top: 20%;
+    left: 20%;
+    border-top-color: rgba(255, 255, 255, 0.4);
+    animation-duration: 2.5s;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .spinner-title {
+    margin: 0 0 16px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .spinner-text {
+    margin: 0 0 24px 0;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 17px;
+    font-weight: 500;
   }
 
   /* Stats Grid */
