@@ -16,7 +16,7 @@ from app.services.analysis import(
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
-
+import json 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="API Backend avec FastAPI, Celery et agents LLM",
@@ -215,3 +215,87 @@ async def create_analysis(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
+
+from fastapi import APIRouter, HTTPException
+from psycopg2.extras import RealDictCursor
+import logging
+import json
+
+router = APIRouter(prefix="/analysis", tags=["analysis"])
+logger = logging.getLogger(__name__)
+
+
+def get_db_connection():
+    from app.config import settings
+    import psycopg2
+    return psycopg2.connect(settings.DATABASE_URL)
+
+
+@app.get("/analysis/{analysis_id}")
+async def get_analysis(analysis_id: int):
+    """
+    Récupère une analyse complète par ID avec tous ses détails
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute("""
+            SELECT 
+                id,
+                name,
+                doc_date,
+                analysis_status,
+                score,
+                calculation_model,
+                analysis_results,
+                task_id,
+                created_at,
+                updated_at
+            FROM analysis
+            WHERE id = %s
+        """, (analysis_id,))
+        
+        analysis = cur.fetchone()
+        
+        if not analysis:
+            raise HTTPException(status_code=404, detail="Analyse non trouvée")
+        
+        cur.close()
+        conn.close()
+        
+        # Convertir les données
+        # JSONB retourne déjà un objet Python (list/dict), pas une string JSON
+        calc_model = analysis['calculation_model']
+        if isinstance(calc_model, str):
+            calc_model = json.loads(calc_model) if calc_model else []
+        elif not isinstance(calc_model, list):
+            calc_model = []
+            
+        analysis_res = analysis['analysis_results']
+        if isinstance(analysis_res, str):
+            analysis_res = json.loads(analysis_res) if analysis_res else []
+        elif not isinstance(analysis_res, list):
+            analysis_res = []
+        
+        response = {
+            "id": analysis['id'],
+            "name": analysis['name'],
+            "doc_date": str(analysis['doc_date']),
+            "analysis_status": analysis['analysis_status'],
+            "score": analysis['score'],
+            "task_id": analysis['task_id'],
+            "created_at": analysis['created_at'].isoformat() if analysis['created_at'] else None,
+            "updated_at": analysis['updated_at'].isoformat() if analysis['updated_at'] else None,
+            "calculation_model": calc_model,
+            "analysis_results": analysis_res
+        }
+        
+        logger.info(f"✅ Analyse {analysis_id} récupérée avec succès")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la récupération de l'analyse {analysis_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")

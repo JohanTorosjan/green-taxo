@@ -7,16 +7,82 @@ from io import BytesIO
 from typing import Dict, Any,List
 import PyPDF2
 import docx
-
 import asyncio 
-
+import json
 logger = logging.getLogger(__name__)
 
 
 def get_db_connection():
     """Connexion à la base de données"""
     return psycopg2.connect(settings.DATABASE_URL)
+        
+def save_analysis_results(
+    doc_id: int, 
+    calculation_model: List[Dict[str, Any]], 
+    merged_results: List[Dict[str, Any]], 
+    score: float
+) -> bool:
+    """
+    Sauvegarde les résultats d'analyse dans la base de données.
+    
+    Args:
+        doc_id (int): ID de l'analyse à mettre à jour
+        calculation_model (List[Dict]): Modèle de calcul (liste des critères)
+        merged_results (List[Dict]): Résultats fusionnés de tous les chunks
+        score (float): Score calculé sur 100
+    
+    Returns:
+        bool: True si succès, False sinon
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Préparer les données JSON
+        model_json = json.dumps(calculation_model, ensure_ascii=False)
+        results_json = json.dumps(merged_results, ensure_ascii=False)
+        print('results_json result')
+        print(results_json)
 
+        # Mettre à jour la table analysis
+        cur.execute("""
+            UPDATE analysis 
+            SET 
+                calculation_model = %s,
+                analysis_results = %s,
+                score = %s,
+                analysis_status = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (
+            model_json,
+            results_json,
+            score,
+            'completed',
+            doc_id
+        ))
+        
+        conn.commit()
+        
+        logger.info(f"✅ Analyse {doc_id} sauvegardée avec succès")
+        logger.info(f"   - Score: {score}/100")
+        logger.info(f"   - Critères: {len(calculation_model)}")
+        logger.info(f"   - Résultats: {len(merged_results)}")
+        
+        cur.close()
+        conn.close()
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la sauvegarde de l'analyse {doc_id}: {str(e)}")
+        try:
+            conn.rollback()
+            cur.close()
+            conn.close()
+        except:
+            pass
+        return False
 
 def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
     """
@@ -180,65 +246,6 @@ def analyze_document_task(self, doc_id: int) -> Dict[str, Any]:
             conn.close()
 
 
-
-        # # Lancer l'analyse avec les agents
-        # agents_result = agents.analyze_document(text_content, metadata)
-        
-        # analysis_result = {
-        #     "document_id": doc_id,
-        #     "filename": filename,
-        #     "doc_date": str(doc_date),
-        #     "text_length": len(text_content),
-        #     "status": "analyzed",
-        #     "agents_results": agents_result
-        # }
-        
-
-
-        # print("ANALLLLLYSE TERMINEEEEEEEEEE")
-        # print(result)
-        # if result["status"] == "success":
-        #     cur.execute("""
-        #     UPDATE documents 
-        #     SET analysis_status = %s, 
-        #         updated_at = CURRENT_TIMESTAMP
-        #     WHERE id = %s
-        #     """, ('completed', doc_id))
-        #     conn.commit()
-
-        #     criteria_data = result["criteria"]
-        #     print("-------------")
-        #     print(criteria_data)
-        #     for criterion in criteria_data.get("criteria", []):
-        #         try:
-        #             cur.execute("""
-        #                 INSERT INTO criterias (document_id, nom, description, coefficient, created_at, updated_at)
-        #                 VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        #             """, (
-        #                 doc_id,
-        #                 criterion.get("name"),
-        #                 criterion.get("description"),
-        #                 criterion.get("coefficient")
-        #             ))
-        #             print(f"Critère sauvegardé: {criterion.get('name')}")
-        #         except Exception as e:
-        #             print(f"Erreur lors de la sauvegarde du critère '{criterion.get('name')}': {str(e)}")
-        #             conn.rollback()
-        #             raise
-        #     conn.commit()
-        #     print(f"Total de {len(criteria_data.get('criteria', []))} critères sauvegardés pour le document {doc_id}")
-    
-        # else:
-        #     print(f"Erreur lors de l'extraction: {result.get('message', 'Erreur inconnue')}")
-        #     cur.execute("""
-        #         UPDATE documents 
-        #         SET analysis_status = %s, 
-        #             updated_at = CURRENT_TIMESTAMP
-        #         WHERE id = %s
-        #     """, ('failed', doc_id))
-        #     conn.commit()
-        # cur.close()
-        # conn.close()
     except Exception as e:
         logger.error(f"Erreur lors de l'analyse du document {doc_id}: {str(e)}")
         
@@ -321,14 +328,14 @@ def chunk_text_by_tokens(text: str, chunk_size: int = 8000) -> list[str]:
 
 
 
-async def run_mistral_repport_analysis(text_content: str, metadata: dict) -> str:
+async def run_mistral_repport_analysis(text_content: str, metadata: dict,calculation_model: list) -> str:
     """
     Fonction asynchrone appelée par Celery via asyncio.run()
     """
     agent = LLMMistralAgent(model="mistral-medium-latest")
 
 
-    response = await agent.analyseRepport(text_content, temperature=0.2)
+    response = await agent.analyseRepport(text_content,calculation_model,temperature=0.2,)
     print("response de ici")
     print(response)
     return response
@@ -400,14 +407,40 @@ def analyze_repport_task(self, doc_id: int) -> Dict[str, Any]:
 
         print(calculation_model)
         async def analyze_all_chunks():
-            tasks = [run_mistral_repport_analysis(chunk, metadata,) for chunk in chunks]
+            tasks = [run_mistral_repport_analysis(chunk, metadata,calculation_model) for chunk in chunks]
             return await asyncio.gather(*tasks)
 
         results = asyncio.run(analyze_all_chunks())
-        print("---------------AKDKKJEZJK")
+        print('KFEKFPZEPOKJEFOPJ-----')
         print(results)
-        # result = asyncio.run(run_mistral_analysis(chunks, metadata))
+        print('analysis score-----')
+        merged_results = []
+        for chunk_result in results:
+            if isinstance(chunk_result, dict) and 'analysisResults' in chunk_result:
+                merged_results.extend(chunk_result['analysisResults'])
 
+
+        analysis_score = calcul_analysis_score(calculation_model=calculation_model,results=merged_results)
+        
+        # result = asyncio.run(run_mistral_analysis(chunks, metadata))
+        success = save_analysis_results(
+            doc_id=doc_id,
+            calculation_model=calculation_model,
+            merged_results=merged_results,
+            score=analysis_score
+        )
+
+        if not success:
+            logger.error("Impossible de sauvegarder les résultats d'analyse")
+            raise RuntimeError("Failed to save analysis results")
+
+        return {
+            "status": "success",
+            "analysis_id": doc_id,
+            "score": analysis_score,
+            "criteria_checked": len(calculation_model),
+            "results_count": len(merged_results)
+        }
         logger.info(f"Analyse Mistral terminée pour le rapport {doc_id}")
       
         #print(result)
@@ -492,7 +525,6 @@ def get_calculation_model() -> List[Dict[str, Any]]:
             criteria = {
                 "id": row[0],
                 "document_id": row[1],
-                "document_name": row[2],
                 "nom": row[3],
                 "description": row[4],
                 "coefficient": row[5],
@@ -506,3 +538,92 @@ def get_calculation_model() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Erreur lors de la récupération du modèle de calcul: {str(e)}")
         return []
+    
+def calcul_analysis_score(calculation_model: List[Dict[str, Any]], results: Dict[str, Any] | List[Dict[str, Any]]) -> float:
+    """
+    Calcule un score de conformité sur 100 en tenant compte des coefficients des critères.
+    
+    Args:
+        calculation_model (List[Dict]): Liste des critères avec leurs coefficients
+            Chaque élément contient au minimum:
+            - nom: str (nom du critère)
+            - coefficient: int (1-5, importance du critère)
+        
+        results (Dict | List): Résultats d'analyse. Peut être:
+            - Une liste plate: [{'name': '...', 'present': True}, ...]
+            - Un dict avec clé 'analysisResults': {'analysisResults': [{'name': '...', 'present': True}, ...]}
+    
+    Returns:
+        float: Score de conformité sur 100 (arrondi à 2 décimales)
+    
+    Example:
+        calculation_model = [
+            {"nom": "Critère 1", "coefficient": 5},
+            {"nom": "Critère 2", "coefficient": 3},
+            {"nom": "Critère 3", "coefficient": 2}
+        ]
+        
+        results = {
+            'analysisResults': [
+                {"name": "Critère 1", "present": True},
+                {"name": "Critère 2", "present": False},
+                {"name": "Critère 3", "present": True}
+            ]
+        }
+        
+        score = calcul_analysis_score(calculation_model, results)
+        # Score = (5 + 0 + 2) / (5 + 3 + 2) * 100 = 70%
+    """
+    
+    # Extraire la liste de résultats si elle est imbriquée dans un dict
+    if isinstance(results, dict) and 'analysisResults' in results:
+        results_list = results['analysisResults']
+    elif isinstance(results, list):
+        results_list = results
+    else:
+        logger.warning("Format de résultats non reconnu")
+        return 0.0
+    
+    if not calculation_model or not results_list:
+        logger.warning("Modèle de calcul ou résultats vides")
+        return 0.0
+    
+    # Créer un dictionnaire des résultats pour faciliter la recherche par nom
+    results_dict = {result['name']: result.get('present', False) for result in results_list}
+    
+    total_weight = 0
+    weighted_score = 0
+    
+    for criterion in calculation_model:
+        criterion_name = criterion.get('nom')
+        coefficient = criterion.get('coefficient', 1)  # Défaut à 1 si coefficient manquant
+        
+        # Validation du coefficient
+        if not isinstance(coefficient, int) or coefficient < 1 or coefficient > 5:
+            logger.warning(f"Coefficient invalide pour '{criterion_name}': {coefficient}, utilisé 1 par défaut")
+            coefficient = 1
+        
+        total_weight += coefficient
+        
+        # Chercher le critère dans les résultats
+        if criterion_name in results_dict:
+            is_present = results_dict[criterion_name]
+            # Ajouter au score pondéré si le critère est satisfait
+            if is_present:
+                weighted_score += coefficient
+            logger.debug(f"Critère '{criterion_name}': {'SATISFAIT' if is_present else 'NON SATISFAIT'} (coef: {coefficient})")
+        else:
+            logger.warning(f"Critère '{criterion_name}' du modèle non trouvé dans les résultats")
+    
+    # Éviter division par zéro
+    if total_weight == 0:
+        logger.error("Poids total des critères est 0")
+        return 0.0
+    
+    # Calculer le score sur 100
+    score = (weighted_score / total_weight) * 100
+    score = round(score, 2)
+    
+    logger.info(f"✅ Score calculé: {score}/100 (Poids satisfait: {weighted_score}/{total_weight})")
+    
+    return score

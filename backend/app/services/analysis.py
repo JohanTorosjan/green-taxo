@@ -5,7 +5,8 @@ from app.tasks.document_analysis import analyze_repport_task
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import logging
-
+import json
+from typing import List, Dict, Any
 logger = logging.getLogger(__name__)
 
 
@@ -66,4 +67,3 @@ async def upload_analysis(name, doc_date, file):
     except Exception as e:
         logger.error(f"Erreur lors de l'upload : {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
-        
