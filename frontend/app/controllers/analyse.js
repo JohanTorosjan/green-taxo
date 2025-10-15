@@ -1,6 +1,7 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 
 export default class AnalyseController extends Controller {
   @tracked showModal = false;
@@ -9,6 +10,7 @@ export default class AnalyseController extends Controller {
   @tracked documentName = '';
   @tracked documentDate = '';
   @tracked companyName = '';
+  @service router;
 
   @action
   handleFileSelect(event) {
@@ -113,7 +115,7 @@ export default class AnalyseController extends Controller {
       if (!response.ok) throw new Error(`Erreur API: ${response.statusText}`);
       let data = await response.json();
       console.log("✅ rapport créé :", data);
-
+      this.analysis_id=data.id
     } catch (err) {
       console.error("❌ Erreur lors de l'upload :", err);
       alert("Erreur lors de l'upload du document !");
@@ -134,6 +136,8 @@ export default class AnalyseController extends Controller {
 
 
     // Message de confirmation
-    alert('Document envoye avec succès ! Consultez la console pour voir les détails.');
+    this.router.transitionTo('analysis', {
+      queryParams: { id: this?.analysis_id },
+    });    
   }
 }
