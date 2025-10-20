@@ -1,11 +1,32 @@
-<h1>Admin Panel</h1>
+{{page-title "Admin - Green-Taxo"}}
 
-<nav>
-    <LinkTo @route="admin.dashboard">Rapports</LinkTo>
-    <LinkTo @route="admin.documents">Modifier le modèle</LinkTo>
+<div class="admin-container">
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <div class="admin-header-top">
+        <h1 class="admin-title">Administration Panel</h1>
+        <p class="admin-subtitle">Manage your reports and document templates</p>
+      </div>
+      
+      <nav class="admin-nav">
+        <LinkTo @route="admin.dashboard" class="admin-nav-link">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span>Dashboard</span>
+        </LinkTo>
+        
+        <LinkTo @route="admin.documents" class="admin-nav-link">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          <span>Edit calculation model</span>
+        </LinkTo>
+      </nav>
+    </div>
+  </header>
 
-</nav>
-
-<hr>
-
-{{outlet}}
+  <div class="admin-content">
+    {{outlet}}
+  </div>
+</div>

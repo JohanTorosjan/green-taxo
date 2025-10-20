@@ -1,11 +1,11 @@
-{{page-title "Analyse de documents"}}
+{{page-title "Document Analysis"}}
 
 <div class="analyse-page">
   <div class="analyse-header">
-    <h1 class="analyse-title">Analyse de documents</h1>
+    <h1 class="analyse-title">Document Analysis</h1>
     <p class="analyse-description">
-      Importez un document PDF pour l'analyser automatiquement. 
-      Le système extraira les informations clés et vous permettra de compléter les données manquantes.
+      Upload a PDF document for automatic analysis. 
+      The system will use an LLM model to automatically generate a compliance score for the document against European regulations.
     </p>
   </div>
 
@@ -21,8 +21,7 @@
       <svg class="upload-icon" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
       </svg>
-      <span class="upload-text">Cliquez pour sélectionner un fichier PDF</span>
-      <span class="upload-subtext">ou glissez-déposez votre fichier ici</span>
+      <span class="upload-text">Click to select a PDF file</span>
       {{#if this.selectedFileName}}
         <span class="selected-file">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -40,8 +39,8 @@
   <div class="modal-overlay" {{on "click" this.closeModal}}>
     <div class="modal-content" {{on "click" this.stopPropagation}}>
       <div class="modal-header">
-        <h2 class="modal-title">Confirmer les informations du document</h2>
-        <button type="button" class="modal-close" {{on "click" this.closeModal}} aria-label="Fermer">
+        <h2 class="modal-title">Confirm document information</h2>
+        <button type="button" class="modal-close" {{on "click" this.closeModal}} aria-label="Close">
           <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -50,13 +49,13 @@
 
       <div class="modal-body">
         <p class="modal-description">
-          Veuillez vérifier et compléter les informations extraites du document avant de continuer.
+          Please review and complete the information extracted from the document before proceeding.
         </p>
 
         <form {{on "submit" this.handleSubmit}} class="modal-form">
           <div class="form-group">
             <label for="doc-name" class="form-label">
-              Nom du document
+              Document Name
               <span class="required">*</span>
             </label>
             <input
@@ -86,14 +85,14 @@
 
           <div class="form-group">
             <label for="company-name" class="form-label">
-              Entreprise
+              Company
               <span class="required">*</span>
             </label>
             <input
               type="text"
               id="company-name"
               class="form-input"
-              placeholder="Nom de l'entreprise"
+              placeholder="Company name"
               value={{this.companyName}}
               {{on "input" (fn this.updateField "companyName")}}
               required
@@ -102,10 +101,10 @@
 
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" {{on "click" this.closeModal}}>
-              Annuler
+              Cancel
             </button>
             <button type="submit" class="btn btn-primary">
-              Confirmer et analyser
+              Confirm and Analyze
             </button>
           </div>
         </form>

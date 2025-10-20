@@ -2,7 +2,7 @@
 @import url('documents.css');
 @import url('criterias.css');
 @import url('analyse.css');
-
+@import url('admin.css');
 /* Variables et base */
 :root {
   --color-primary: #2563eb;
