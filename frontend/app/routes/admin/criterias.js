@@ -12,7 +12,7 @@ export default class CriteriasRoute extends Route {
     try {
 
       const response = await fetch(
-        `http://localhost:8000/criterias/${params.id}`,
+        `http://195.220.87.129:8000/criterias/${params.id}`,
         {
           method: 'GET',
           headers: {

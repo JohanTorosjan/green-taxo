@@ -13,7 +13,7 @@ export default class AnalysisRoute extends Route {
 
   async model(params) {
     try {
-      const response = await fetch(`http://localhost:8000/analysis/${params.id}`);
+      const response = await fetch(`http://195.220.87.129:8000/analysis/${params.id}`);
 
       if (!response.ok) {
         if (response.status === 404) {
