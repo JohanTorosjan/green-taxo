@@ -95,21 +95,19 @@
 .btn-download:hover {
   color: var(--color-primary);
 }
+
 .btn-action{
-  
 background-color: white;
 border: none;
 font-weight: 1000;
 }
 
 .btn-action:hover{
-  
 background-color: var(--color-bg);
 
 }
 
 svg:hover{
-  
 background-color: var(--color-bg);
 
 }
@@ -117,6 +115,7 @@ background-color: var(--color-bg);
 .btn-action-edit{
   height: 5dvh;
 }
+
 .btn-analysis:hover {
   color: var(--color-success);
 }
@@ -229,6 +228,7 @@ background-color: var(--color-bg);
   gap: var(--spacing-sm);
   
 }
+
 svg{
   height: 3dvh;
 }

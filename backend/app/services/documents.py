@@ -227,3 +227,43 @@ async def toggle_used(doc_id: int, used: bool):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour : {str(e)}")
 
+async def upload_documents_skip(name, doc_date, file):
+    """
+    Upload un document
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        file_bytes = await file.read()
+
+        # Insérer le document avec le statut initial 'pending'
+        cur.execute("""
+            INSERT INTO documents (name, doc_date, file_data, analysis_status,used)
+            VALUES (%s, %s, %s, %s,true)
+            RETURNING id, name, doc_date, analysis_status, created_at, updated_at
+        """, (name, doc_date, psycopg2.Binary(file_bytes), 'skipped'))
+
+        new_doc = cur.fetchone()
+        doc_id = new_doc[0]
+        
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        logger.info(f"Document {doc_id} uploadé avec succès.")
+
+        return {
+            "id": new_doc[0],
+            "name": new_doc[1],
+            "doc_date": str(new_doc[2]),
+            "analysis_status": new_doc[3],
+            "created_at": new_doc[4],
+            "updated_at": new_doc[5],
+            "message": "Document uploadé avec succès. L'analyse est en cours..."
+        }
+    except Exception as e:
+        logger.error(f"Erreur lors de l'upload : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
+        

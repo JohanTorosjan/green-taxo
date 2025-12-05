@@ -1,5 +1,5 @@
 <div class="analysis-detail-container">
-  <!-- Header -->
+  {{!-- Header --}}
   <div class="analysis-header">
 
     <div class="header-content">
@@ -10,17 +10,17 @@
       </p>
     </div>
 
-    <button class="btn btn-download" {{on "click" this.downloadReport}}>
+    <button class="btn btn-download" type="button" {{on "click" this.downloadReport}}>
       <span class="btn-icon">📥</span>
       <span>Download</span>
     </button>
   </div>
 
-  <!-- Score Card -->
+  {{!-- Score Card --}}
   <div class="score-card {{this.scoreClass}}">
     
     {{#if this.isProcessing}}
-      <!-- Spinner for pending/processing -->
+      {{!-- Spinner for pending/processing --}}
       <div class="spinner-container">
         
         <div class="spinner">
@@ -42,7 +42,7 @@
         </div>
       </div>
     {{else}}
-      <!-- Normal score display -->
+      {{!-- Normal score display --}}
       <div class="score-circle">
         <div class="score-number">{{this.scorePercentage}}</div>
         <div class="score-label">/100</div>
@@ -64,7 +64,7 @@
 
   </div>
 
-  <!-- Stats -->
+  {{!-- Stats --}}
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-content">
@@ -94,7 +94,7 @@
     </div>
   </div>
 
-  <!-- Criteria List -->
+  {{!-- Criteria List --}}
   <div class="criteria-section">
     <h2>Criteria Details</h2>
     
@@ -103,7 +103,7 @@
 
         <div class="criteria-item {{if criterion.present 'satisfied' 'not-satisfied'}}">
           
-          <!-- Criteria Header -->
+          {{!-- Criteria Header --}}
           <div 
             class="criteria-header" 
             {{on "click" (fn this.toggleCriteria criterion.name)}}
@@ -148,7 +148,7 @@
             </div>
           </div>
 
-          <!-- Criteria Details (Expandable) -->
+          {{!-- Criteria Details (Expandable) --}}
           {{#if (this.isCriteriaExpanded criterion.name)}}
             <div class="criteria-details">
               <div class="description-box">
@@ -171,7 +171,7 @@
     </div>
   </div>
 
-  <!-- Metadata -->
+  {{!-- Metadata --}}
   <div class="metadata-section">
     <h3>ℹ️ Information</h3>
     <div class="metadata-grid">

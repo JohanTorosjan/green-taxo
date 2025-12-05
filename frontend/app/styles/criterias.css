@@ -613,7 +613,7 @@
 }
 
 /* Responsive Adjustments */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .header-content h1 {
     font-size: 22px;
   }

@@ -8,6 +8,7 @@ from app.services.documents import (
     get_document_analysis,
     get_criterias,
     toggle_used,
+    upload_documents_skip,
 )
 from app.services.analysis import(
         upload_analysis
@@ -126,6 +127,21 @@ async def create_document(
         print('document')
 
         result = await upload_documents(name, doc_date, file)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
+
+@app.post("/api/documents/skipAi")
+async def create_document(
+    name: str = Form(...),
+    doc_date: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """
+    Upload un document
+    """
+    try:
+        result = await upload_documents_skip(name, doc_date, file)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
