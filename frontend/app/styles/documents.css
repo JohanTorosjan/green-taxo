@@ -97,18 +97,15 @@
 }
 
 .btn-action{
-background-color: white;
+background-color: transparent;
 border: none;
 font-weight: 1000;
 }
 
 .btn-action:hover{
-background-color: var(--color-bg);
-
-}
+transform: scale(1.1);}
 
 svg:hover{
-background-color: var(--color-bg);
 
 }
 
@@ -173,6 +170,8 @@ background-color: var(--color-bg);
 
 .table-row:hover {
   background: var(--color-border);
+  transform: scale(1.03);
+  cursor: pointer;
 }
 
 .table-row.row-unused {
@@ -230,6 +229,7 @@ background-color: var(--color-bg);
 
 svg{
   height: 3dvh;
+  border-radius: 39px;
 }
 
 /* Status badges */
