@@ -152,7 +152,7 @@ background-color: var(--color-bg);
 
 .table-header {
   display: grid;
-  grid-template-columns: 10px 1.5fr 15vw 15vw 15vw 15vw;
+  grid-template-columns: 10px 1.5fr 15dvw 15dvw 15dvw 10dvw;
   padding: var(--spacing-md) var(--spacing-lg);
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
@@ -164,7 +164,7 @@ background-color: var(--color-bg);
 
 .table-row {
   display: grid;
-  grid-template-columns: 10px 1.5fr 15vw 15vw 15vw 15vw;
+  grid-template-columns: 10px 1.5fr 15dvw 15dvw 15dvw 10dvw;
   padding: var(--spacing-md) var(--spacing-lg);
   align-items: center;
   border-bottom: 1px solid var(--color-border);
@@ -172,7 +172,7 @@ background-color: var(--color-bg);
 }
 
 .table-row:hover {
-  background: var(--color-bg);
+  background: var(--color-border);
 }
 
 .table-row.row-unused {
@@ -180,7 +180,7 @@ background-color: var(--color-bg);
 }
 
 .table-row.row-unused:hover {
-  background: #fecaca;
+  background: var(--color-border);
 }
 
 /* Colonnes */
@@ -226,7 +226,6 @@ background-color: var(--color-bg);
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);
-  
 }
 
 svg{

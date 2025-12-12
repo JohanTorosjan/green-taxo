@@ -269,4 +269,14 @@ export default class AdminDocumentsController extends Controller {
   @action stopPropagation(event) {
     event.stopPropagation();
   }
+
+  @action openDetails(doc){
+    if(doc.analysis_status==='completed' || doc.analysis_status==='skipped'){
+      this.router.transitionTo('admin.criterias', {
+        queryParams: { id: doc.id },
+      });
+    }
+    else{return}
+
+  }
 }

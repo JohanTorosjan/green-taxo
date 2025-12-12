@@ -243,7 +243,7 @@ Return the response in this exact JSON format:
     ]
 }}
 
-CRITICAL: Return ONLY valid JSON. Do not add markdown, code blocks, or any explanations."""
+CRITICAL: Return ONLY valid JSON. Do not add markdown, code blocks, line returns or any explanations."""
 
         try:
             self.llm.temperature = temperature

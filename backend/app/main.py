@@ -9,6 +9,7 @@ from app.services.documents import (
     get_criterias,
     toggle_used,
     upload_documents_skip,
+    create_criteria
 )
 from app.services.analysis import(
         upload_analysis
@@ -315,3 +316,77 @@ async def get_analysis(analysis_id: int):
     except Exception as e:
         logger.error(f"❌ Erreur lors de la récupération de l'analyse {analysis_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+    
+
+@app.delete("/api/documents/{doc_id}")
+async def delete_doc(doc_id: int):
+    conn = None
+    cur = None
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Vérifier si le document existe
+        cur.execute("""
+            SELECT id 
+            FROM documents 
+            WHERE id = %s
+        """, (doc_id,))
+        
+        document = cur.fetchone()
+        
+        if not document:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Document avec l'ID {doc_id} introuvable"
+            )
+        
+        # Supprimer le document
+        cur.execute("""
+            DELETE FROM documents
+            WHERE id = %s
+        """, (doc_id,))
+        
+        conn.commit()
+        
+        return {
+            "success": True,
+            "message": f"Document {doc_id} supprimé avec succès"
+        }
+        
+    except HTTPException:
+        # Re-lever les HTTPException
+        raise
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de la suppression du document : {str(e)}"
+        )
+        
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+@app.post("/criterias/{doc_id}")
+async def create_criterias(
+    doc_id: int,
+    name: str = Form(...),
+    description: str = Form(...),
+    coeff: int = Form(...)  # Form au lieu de File
+):
+    """
+    Upload un critère
+    """
+    try:
+        print('OAZKEOPFKEKZFPZFPKE')
+        result = await create_criteria(doc_id, name, description, coeff)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")

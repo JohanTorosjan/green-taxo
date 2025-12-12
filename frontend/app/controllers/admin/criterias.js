@@ -115,32 +115,27 @@ export default class CriteriasController extends Controller {
       return;
     }
 
-    const documentId = this.queryParams.id || 1; // Récupère l'ID des query params
-    const payload = {
-      nom: this.formData.nom,
-      description: this.formData.description,
-      coefficient: this.formData.coefficient,
-      data: this.formData.dataString ? JSON.parse(this.formData.dataString) : null,
-      document_id: documentId,
-    };
+    const documentId = this.id || 1; // Récupère l'ID des query params
 
     try {
       let response;
       const url = this.isEditMode
         ? `${this.API_URL}/criterias/${this.currentEditingId}`
-        : `${this.API_URL}/criterias`;
+        : `${this.API_URL}/criterias/${documentId}`;
 
       const method = this.isEditMode ? 'PUT' : 'POST';
 
       console.log(`[Criterias] Envoi ${method} vers:`, url);
-      console.log('[Criterias] Payload:', payload);
+  // Créer un FormData au lieu de JSON
+      const formData = new FormData();
+      formData.append('name', this.formData.nom);
+      formData.append('description', this.formData.description);
+      formData.append('coeff', this.formData.coefficient);
 
       response = await fetch(url, {
         method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        // Ne pas mettre de Content-Type, il sera automatiquement défini pour multipart/form-data
+        body: formData,
       });
 
       console.log(`[Criterias] Réponse ${method}:`, response.status, response);
@@ -222,7 +217,7 @@ export default class CriteriasController extends Controller {
     console.log('[Criterias] Rechargement de la liste');
     this.isLoading = true;
     try {
-      const documentId = this.queryParams.id || 1;
+      const documentId = this.id || 1;
       const url = `${this.API_URL}/criterias/${documentId}`;
       console.log('[Criterias] Fetch GET vers:', url);
 

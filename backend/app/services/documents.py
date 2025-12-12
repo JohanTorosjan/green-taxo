@@ -267,3 +267,35 @@ async def upload_documents_skip(name, doc_date, file):
         logger.error(f"Erreur lors de l'upload : {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
         
+async def create_criteria(doc_id: int, name: str, description: str, coeff: int):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    print('OKKKKKKK')
+
+    try:
+        # Insertion du critère
+        cur.execute("""
+            INSERT INTO criterias (document_id, nom, description, coefficient)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, document_id, nom, description, coefficient, data, used, created_at, updated_at
+        """, (doc_id, name, description, coeff))
+        
+        # Récupération du critère créé
+        criteria = cur.fetchone()
+        
+        # Commit de la transaction
+        conn.commit()
+        
+        return {
+            "success": True,
+            "message": "Critère créé avec succès",
+            "data": dict(criteria)
+        }
+        
+    except Exception as e:
+        conn.rollback()
+        raise e
+        
+    finally:
+        cur.close()
+        conn.close()
