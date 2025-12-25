@@ -170,7 +170,7 @@ svg:hover{
 
 .table-row:hover {
   background: var(--color-border);
-  transform: scale(1.03);
+  transform: scale(1.01);
   cursor: pointer;
 }
 

@@ -270,8 +270,6 @@ async def upload_documents_skip(name, doc_date, file):
 async def create_criteria(doc_id: int, name: str, description: str, coeff: int):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    print('OKKKKKKK')
-
     try:
         # Insertion du critère
         cur.execute("""
@@ -289,6 +287,89 @@ async def create_criteria(doc_id: int, name: str, description: str, coeff: int):
         return {
             "success": True,
             "message": "Critère créé avec succès",
+            "data": dict(criteria)
+        }
+        
+    except Exception as e:
+        conn.rollback()
+        raise e
+        
+    finally:
+        cur.close()
+        conn.close()
+
+async def update_criteria(criteria_id: int, name: str, description: str, coeff: int):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # Mise à jour du critère
+        cur.execute("""
+            UPDATE criterias 
+            SET nom = %s, 
+                description = %s, 
+                coefficient = %s,
+                updated_at = NOW()
+            WHERE id = %s
+            RETURNING id, document_id, nom, description, coefficient, data, used, created_at, updated_at
+        """, (name, description, coeff, criteria_id))
+        
+        # Récupération du critère mis à jour
+        criteria = cur.fetchone()
+        
+        # Vérifier si le critère existe
+        if criteria is None:
+            conn.rollback()
+            return {
+                "success": False,
+                "message": f"Critère avec l'id {criteria_id} introuvable"
+            }
+        
+        # Commit de la transaction
+        conn.commit()
+        
+        return {
+            "success": True,
+            "message": "Critère mis à jour avec succès",
+            "data": dict(criteria)
+        }
+        
+    except Exception as e:
+        conn.rollback()
+        raise e
+        
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def delete_criteria(criteria_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # Suppression du critère
+        cur.execute("""
+            DELETE FROM criterias 
+            WHERE id = %s
+            RETURNING id, document_id, nom, description, coefficient, data, used, created_at, updated_at
+        """, (criteria_id,))
+        
+        # Récupération du critère supprimé
+        criteria = cur.fetchone()
+        
+        # Vérifier si le critère existe
+        if criteria is None:
+            conn.rollback()
+            return {
+                "success": False,
+                "message": f"Critère avec l'id {criteria_id} introuvable"
+            }
+        
+        # Commit de la transaction
+        conn.commit()
+        
+        return {
+            "success": True,
+            "message": "Critère supprimé avec succès",
             "data": dict(criteria)
         }
         

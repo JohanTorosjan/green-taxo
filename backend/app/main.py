@@ -9,7 +9,9 @@ from app.services.documents import (
     get_criterias,
     toggle_used,
     upload_documents_skip,
-    create_criteria
+    create_criteria,
+    update_criteria,
+    delete_criteria
 )
 from app.services.analysis import(
         upload_analysis
@@ -390,3 +392,32 @@ async def create_criterias(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")
+
+@app.put("/criterias/{criteria_id}")
+async def update_criterias(
+    criteria_id: int,
+    name: str = Form(...),
+    description: str = Form(...),
+    coeff: int = Form(...)
+):
+    """
+    Update un critère
+    """
+    try:
+        result = await update_criteria(criteria_id, name, description, coeff)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour : {str(e)}")
+
+@app.delete("/criterias/{criteria_id}")
+async def delete_criterias(
+    criteria_id: int
+):
+    """
+    Supprime un critère
+    """
+    try:
+        result = await delete_criteria(criteria_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression : {str(e)}")

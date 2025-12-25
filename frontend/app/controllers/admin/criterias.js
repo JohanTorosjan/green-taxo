@@ -148,8 +148,8 @@ export default class CriteriasController extends Controller {
       console.log('[Criterias] Résultat de la sauvegarde:', result);
 
       this.successMessage = this.isEditMode
-        ? 'Critère modifié avec succès!'
-        : 'Critère créé avec succès!';
+        ? 'Criteria updated!'
+        : 'Criteria created!';
 
       // Rechargement de la liste
       await this.reloadCriterias();
@@ -172,7 +172,7 @@ export default class CriteriasController extends Controller {
   async deleteCriteria(id) {
     console.log('[Criterias] Tentative de suppression de l\'ID:', id);
 
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce critère?')) {
+    if (!confirm('Are you sure you want to delete this criteria ?')) {
       console.log('[Criterias] Suppression annulée par l\'utilisateur');
       return;
     }
