@@ -18,7 +18,7 @@ export default class CriteriasController extends Controller {
     dataError: null,
   };
 
-  API_URL = 'http://localhost:8000';
+  API_URL = 'http://195.220.87.129:8000';
 
   get criterias() {
     console.log('[Criterias] Getter criterias - model:', this.model);

@@ -107,7 +107,7 @@ export default class AnalyseController extends Controller {
     formData.append("file", this.selectedFile);
 
       console.log("📤 Envoi du rapport...");
-      let response = await fetch("http://localhost:8000/api/analysis", {
+      let response = await fetch("http://195.220.87.129:8000/api/analysis", {
         method: "POST",
         body: formData
       });
