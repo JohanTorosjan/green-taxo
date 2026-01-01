@@ -21,6 +21,17 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
 import json 
+
+
+# À ajouter en haut de main.py avec les autres imports
+from pydantic import BaseModel
+from app.services.auth import login_user, create_user, get_user_by_id, get_all_users
+from app.dependencies import get_current_user, get_current_admin_user
+from typing import Dict, Any
+from fastapi import Depends
+
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="API Backend avec FastAPI, Celery et agents LLM",
@@ -421,3 +432,111 @@ async def delete_criterias(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression : {str(e)}")
+    
+
+
+
+
+    ########### AUTH #############
+# ============= MODÈLES PYDANTIC =============
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class CreateUserRequest(BaseModel):
+    nom: str
+    prenom: str
+    email: str
+    password: str
+    admin: bool = False
+
+
+# ============= ROUTES D'AUTHENTIFICATION =============
+
+@app.post("/api/auth/login")
+async def login(credentials: LoginRequest):
+    """
+    Connexion d'un utilisateur
+    Retourne un token JWT
+    """
+    try:
+        conn = get_db_connection()
+        result = login_user(conn, credentials.email, credentials.password)
+        conn.close()
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la connexion: {str(e)}")
+
+
+@app.post("/api/auth/register")
+async def register(user_data: CreateUserRequest, admin_user: Dict[str, Any] = Depends(get_current_admin_user)):
+    """
+    Création d'un nouvel utilisateur (réservé aux admins)
+    """
+    try:
+        conn = get_db_connection()
+        result = create_user(
+            conn,
+            nom=user_data.nom,
+            prenom=user_data.prenom,
+            email=user_data.email,
+            password=user_data.password,
+            admin=user_data.admin
+        )
+        conn.close()
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la création: {str(e)}")
+
+
+@app.get("/api/auth/me")
+async def get_me(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Récupère les informations de l'utilisateur connecté
+    """
+    try:
+        conn = get_db_connection()
+        user = get_user_by_id(conn, current_user['id'])
+        conn.close()
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+
+
+@app.get("/api/users")
+async def list_users(admin_user: Dict[str, Any] = Depends(get_current_admin_user)):
+    """
+    Liste tous les utilisateurs (réservé aux admins)
+    """
+    try:
+        conn = get_db_connection()
+        users = get_all_users(conn)
+        conn.close()
+        return users
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+
+
+@app.get("/api/users/{user_id}")
+async def get_user(user_id: int, admin_user: Dict[str, Any] = Depends(get_current_admin_user)):
+    """
+    Récupère un utilisateur par ID (réservé aux admins)
+    """
+    try:
+        conn = get_db_connection()
+        user = get_user_by_id(conn, user_id)
+        conn.close()
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")

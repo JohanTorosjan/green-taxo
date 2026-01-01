@@ -87,3 +87,40 @@ CREATE TABLE IF NOT EXISTS analysis (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE analysis ADD COLUMN IF NOT EXISTS calculation_model JSONB DEFAULT NULL, ADD COLUMN IF NOT EXISTS score FLOAT DEFAULT NULL, ADD COLUMN IF NOT EXISTS analysis_results JSONB DEFAULT NULL;
+
+-- ⚠️ VERSION NON SÉCURISÉE - À ÉVITER ⚠️
+-- Cette version stocke les mots de passe en clair
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    nom VARCHAR(255) NOT NULL,
+    prenom VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,  -- ⚠️ Mot de passe en clair
+    admin BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP WITH TIME ZONE
+);
+
+-- Index sur l'email pour les recherches rapides
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Trigger pour mettre à jour automatiquement updated_at
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+-- Modifier la table analysis pour ajouter la relation avec users
+ALTER TABLE analysis 
+ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+
+-- Index sur user_id pour les jointures
+CREATE INDEX IF NOT EXISTS idx_analysis_user_id ON analysis(user_id);
+
+-- Créer un utilisateur admin par défaut
+INSERT INTO users (nom, prenom, email, password, admin) 
+VALUES ('Admin', 'Système', 'admin@greentaxo.local', 'admin123', TRUE)
+ON CONFLICT (email) DO NOTHING;
