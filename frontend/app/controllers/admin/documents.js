@@ -30,7 +30,7 @@ export default class AdminDocumentsController extends Controller {
   async loadDocuments() {
     try {
       console.log("📥 Chargement des documents...");
-      let response = await fetch("http://195.220.87.129:8000/api/documents");
+      let response = await fetch("http://localhost:8000/api/documents");
       if (!response.ok) throw new Error("Erreur API");
       this.documents = await response.json();
       console.log("✅ Documents chargés:", this.documents);
@@ -77,7 +77,7 @@ export default class AdminDocumentsController extends Controller {
 
   async checkAnalysisStatus(docId) {
     try {
-      let response = await fetch(`http://195.220.87.129:8000/api/documents/${docId}/analysis`);
+      let response = await fetch(`http://localhost:8000/api/documents/${docId}/analysis`);
       if (!response.ok) throw new Error("Erreur API analyse");
       
       let analysisData = await response.json();
@@ -150,7 +150,7 @@ export default class AdminDocumentsController extends Controller {
     console.log(this.skipAi)
     if(this.skipAi){
       try{
-          let response = await fetch("http://195.220.87.129:8000/api/documents/skipAi", {
+          let response = await fetch("http://localhost:8000/api/documents/skipAi", {
               method: "POST",
               body: formData
             });
@@ -167,7 +167,7 @@ export default class AdminDocumentsController extends Controller {
     }
     try {
       console.log("📤 Envoi du document...");
-      let response = await fetch("http://195.220.87.129:8000/api/documents", {
+      let response = await fetch("http://localhost:8000/api/documents", {
         method: "POST",
         body: formData
       });
@@ -187,7 +187,7 @@ export default class AdminDocumentsController extends Controller {
   @action async downloadDocument(id, name) {
     try {
       console.log(`📥 Téléchargement du document ${id}...`);
-      let response = await fetch(`http://195.220.87.129:8000/api/documents/${id}/download`);
+      let response = await fetch(`http://localhost:8000/api/documents/${id}/download`);
       if (!response.ok) throw new Error("Erreur API téléchargement");
 
       let blob = await response.blob();
@@ -229,7 +229,7 @@ export default class AdminDocumentsController extends Controller {
     
     try {
       console.log(`🗑️ Suppression du document ${this.documentToDelete.id}...`);
-      let response = await fetch(`http://195.220.87.129:8000/api/documents/${this.documentToDelete.id}`, {
+      let response = await fetch(`http://localhost:8000/api/documents/${this.documentToDelete.id}`, {
         method: "DELETE"
       });
 
@@ -247,7 +247,7 @@ export default class AdminDocumentsController extends Controller {
   @action async toggleDocumentUsed(doc) {
     try {
       console.log(`🔄 Mise à jour du statut 'used' pour le document ${doc.id}...`);
-      let response = await fetch(`http://195.220.87.129:8000/api/documents/${doc.id}`, {
+      let response = await fetch(`http://localhost:8000/api/documents/${doc.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"

@@ -97,7 +97,7 @@ export default class AnalysisDetailController extends Controller {
   // Rafraîchir l'analyse
   async refreshAnalysis() {
     try {
-      const response = await fetch(`http://195.220.87.129:8000/analysis/${this.model.id}`);
+      const response = await fetch(`http://localhost:8000/analysis/${this.model.id}`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
