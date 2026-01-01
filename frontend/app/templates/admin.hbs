@@ -5,7 +5,7 @@
     <div class="admin-header-content">
       <div class="admin-header-top">
         <h1 class="admin-title">Administration Panel</h1>
-        <p class="admin-subtitle">Manage your reports and import documents to edit your calculation model</p>
+        <p class="admin-subtitle">Manage your reports, import documents to edit your calculation model and manage the app access</p>
       </div>
       
       <nav class="admin-nav">
@@ -22,6 +22,15 @@
           </svg>
           <span>Edit calculation model</span>
         </LinkTo>
+
+        <LinkTo @route="admin.users" class="admin-nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span>Manage users</span>
+        </LinkTo>
+
+
       </nav>
     </div>
   </header>

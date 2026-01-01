@@ -12,6 +12,7 @@ Router.map(function () {
     this.route('documents');
     this.route('criterias');
 
+    this.route('users');
   });
   this.route('analyse');
   this.route('analysis');
