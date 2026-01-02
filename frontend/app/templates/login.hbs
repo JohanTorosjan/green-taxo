@@ -1,0 +1,68 @@
+{{!-- frontend/app/templates/login.hbs --}}
+{{page-title "Login"}}
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">Green-Taxo</h1>
+      <p class="login-subtitle">Connectez-vous à votre compte</p>
+    </div>
+
+    <form class="login-form" {{on "submit" this.handleLogin}}>
+      
+      {{!-- Affichage des erreurs --}}
+      {{#if this.errorMessage}}
+        <div class="alert alert-error">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <span>{{this.errorMessage}}</span>
+        </div>
+      {{/if}}
+
+      {{!-- Champ Email --}}
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          id="email"
+          class="form-input"
+          placeholder="votre.email@example.com"
+          value={{this.email}}
+          {{on "input" this.updateEmail}}
+          disabled={{this.isLoading}}
+          required
+        />
+      </div>
+
+      {{!-- Champ Mot de passe --}}
+      <div class="form-group">
+        <label for="password" class="form-label">Mot de passe</label>
+        <input
+          type="password"
+          id="password"
+          class="form-input"
+          placeholder="••••••••"
+          value={{this.password}}
+          {{on "input" this.updatePassword}}
+          disabled={{this.isLoading}}
+          required
+        />
+      </div>
+
+      {{!-- Bouton de connexion --}}
+      <button
+        type="submit"
+        class="btn btn-primary btn-block"
+        disabled={{this.isLoading}}
+      >
+        {{#if this.isLoading}}
+          <span class="spinner"></span>
+          Connexion en cours...
+        {{else}}
+          Se connecter
+        {{/if}}
+      </button>
+    </form>
+  </div>
+</div>

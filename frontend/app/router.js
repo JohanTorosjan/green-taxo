@@ -16,4 +16,6 @@ Router.map(function () {
   });
   this.route('analyse');
   this.route('analysis');
+  this.route('login');
+  this.route('authenticated');
 });
