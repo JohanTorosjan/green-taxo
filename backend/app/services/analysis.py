@@ -15,7 +15,7 @@ def get_db_connection():
     return conn
 
 
-async def upload_analysis(name, doc_date, file):
+async def upload_analysis(name, doc_date, file, user_id):  # ← AJOUT de user_id
     """
     Upload un rapport et déclenche l'analyse asynchrone
     """
@@ -26,11 +26,13 @@ async def upload_analysis(name, doc_date, file):
         file_bytes = await file.read()
 
         # Insérer le document avec le statut initial 'pending'
+        # Insérer le document avec le statut initial 'pending' et le user_id
         cur.execute("""
-            INSERT INTO analysis (name, doc_date, file_data, analysis_status)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id, name, doc_date, analysis_status, created_at, updated_at
-        """, (name, doc_date, psycopg2.Binary(file_bytes), 'pending'))
+            INSERT INTO analysis (name, doc_date, file_data, analysis_status, user_id)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id, name, doc_date, analysis_status, user_id, created_at, updated_at
+        """, (name, doc_date, psycopg2.Binary(file_bytes), 'pending', user_id))  # ← AJOUT user_id
+        
 
         new_analysis = cur.fetchone()
         analysis_id = new_analysis[0]
@@ -59,9 +61,10 @@ async def upload_analysis(name, doc_date, file):
             "name": new_analysis[1],
             "doc_date": str(new_analysis[2]),
             "analysis_status": new_analysis[3],
+            "user_id":new_analysis[4],
             "task_id": task.id,
-            "created_at": new_analysis[4],
-            "updated_at": new_analysis[5],
+            "created_at": new_analysis[5],
+            "updated_at": new_analysis[6],
             "message": "Document uploadé avec succès. L'analyse est en cours..."
         }
     except Exception as e:
