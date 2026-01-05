@@ -6,6 +6,7 @@
       <div class="header-left">
         <h1 class="app-logo">Green-Taxo</h1>
         <nav class="main-nav">
+          {{this.auth.currentUser}}
           <LinkTo @route="analyse" class="nav-link">Analyze a report </LinkTo>
           <LinkTo @route="admin" class="nav-link">Admin</LinkTo>
         </nav>

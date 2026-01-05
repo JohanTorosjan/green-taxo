@@ -12,6 +12,8 @@ export default class AnalyseController extends Controller {
   @tracked companyName = '';
   @service router;
 
+  @service auth;
+
   @action
   handleFileSelect(event) {
     const file = event.target.files[0];
@@ -107,8 +109,13 @@ export default class AnalyseController extends Controller {
     formData.append("file", this.selectedFile);
 
       console.log("📤 Envoi du rapport...");
+        const token = this.auth.token;
+
       let response = await fetch("http://localhost:8000/api/analysis", {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`, // ← À répéter partout
+        },
         body: formData
       });
 

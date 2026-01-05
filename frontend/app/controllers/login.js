@@ -44,14 +44,14 @@ export default class LoginController extends Controller {
       const redirectTo = localStorage.getItem('redirectAfterLogin');
       if (!redirectTo || redirectTo === 'login') {
         console.log('✅ Connexion réussie, redirection vers accueil...');
-        this.router.transitionTo('index');
+        this.router.transitionTo('analyse');
       }
       // Sinon le service.login() a déjà redirigé
 
     } catch (error) {
       // Afficher l'erreur à l'utilisateur
       console.error('❌ Erreur:', error);
-      this.errorMessage = error.message || 'Email ou mot de passe incorrect';
+      this.errorMessage = error.message || 'Wrong Email or Password';
     } finally {
       // Cacher le loader
       this.isLoading = false;

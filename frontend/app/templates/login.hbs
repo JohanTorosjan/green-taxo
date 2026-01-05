@@ -4,8 +4,8 @@
 <div class="login-container">
   <div class="login-card">
     <div class="login-header">
-      <h1 class="login-title">Green-Taxo</h1>
-      <p class="login-subtitle">Connectez-vous à votre compte</p>
+      <h1 class="login-title">Login</h1>
+      <p class="login-subtitle">You need to have an account in order to use this app</p>
     </div>
 
     <form class="login-form" {{on "submit" this.handleLogin}}>
@@ -27,7 +27,7 @@
           type="email"
           id="email"
           class="form-input"
-          placeholder="votre.email@example.com"
+          placeholder="email@example.com"
           value={{this.email}}
           {{on "input" this.updateEmail}}
           disabled={{this.isLoading}}
@@ -37,7 +37,7 @@
 
       {{!-- Champ Mot de passe --}}
       <div class="form-group">
-        <label for="password" class="form-label">Mot de passe</label>
+        <label for="password" class="form-label">Password</label>
         <input
           type="password"
           id="password"
@@ -58,9 +58,9 @@
       >
         {{#if this.isLoading}}
           <span class="spinner"></span>
-          Connexion en cours...
+          Login ...
         {{else}}
-          Se connecter
+          Connect
         {{/if}}
       </button>
     </form>

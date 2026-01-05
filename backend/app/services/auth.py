@@ -25,7 +25,7 @@ def authenticate_user(conn, email: str, password: str) -> Dict[str, Any]:
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou mot de passe incorrect",
+            detail="Wrong Email or Password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
