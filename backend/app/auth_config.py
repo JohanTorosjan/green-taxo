@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 # Configuration JWT
 SECRET_KEY = "votre-secret-key-a-changer-en-production"  # À mettre dans .env
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes pour le token d'accès
+ACCESS_TOKEN_EXPIRE_MINUTES = 10000  # 30 minutes pour le token d'accès
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
