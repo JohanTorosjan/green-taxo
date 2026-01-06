@@ -41,7 +41,7 @@ export default class LoginController extends Controller {
 
       // Le service gère la redirection automatiquement
       // Soit vers la page sauvegardée, soit vers l'accueil
-      const redirectTo = localStorage.getItem('redirectAfterLogin');
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin');
       if (!redirectTo || redirectTo === 'login') {
         console.log('✅ Connexion réussie, redirection vers accueil...');
         this.router.transitionTo('analyse');

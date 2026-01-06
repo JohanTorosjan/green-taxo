@@ -13,16 +13,16 @@ export default class AuthService extends Service {
 
   constructor() {
     super(...arguments);
-    // Au démarrage, vérifier si un token existe déjà dans localStorage
+    // Au démarrage, vérifier si un token existe déjà dans sessionStorage
     this.loadStoredAuth();
   }
 
   /**
-   * Charge le token et l'utilisateur depuis localStorage au démarrage
+   * Charge le token et l'utilisateur depuis sessionStorage au démarrage
    */
   loadStoredAuth() {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('current_user');
+    const storedToken = sessionStorage.getItem('auth_token');
+    const storedUser = sessionStorage.getItem('current_user');
 
     if (storedToken && storedUser) {
       this.token = storedToken;
@@ -60,16 +60,16 @@ export default class AuthService extends Service {
       this.currentUser = data.user;
       this.isAuthenticated = true;
 
-      // Sauvegarder dans localStorage pour persister entre les rechargements
-      localStorage.setItem('auth_token', data.access_token);
-      localStorage.setItem('current_user', JSON.stringify(data.user));
+      // Sauvegarder dans sessionStorage pour persister entre les rechargements
+      sessionStorage.setItem('auth_token', data.access_token);
+      sessionStorage.setItem('current_user', JSON.stringify(data.user));
 
       console.log('✅ Connexion réussie:', this.currentUser.email);
 
       // Rediriger vers la page qu'il voulait visiter (si sauvegardée)
-      const redirectTo = localStorage.getItem('redirectAfterLogin');
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin');
       if (redirectTo && redirectTo !== 'login') {
-        localStorage.removeItem('redirectAfterLogin');
+        sessionStorage.removeItem('redirectAfterLogin');
         this.router.transitionTo(redirectTo);
       }
 debugger
@@ -88,9 +88,9 @@ debugger
     this.currentUser = null;
     this.isAuthenticated = false;
 
-    // Supprimer du localStorage
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('current_user');
+    // Supprimer du sessionStorage
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('current_user');
 
     console.log('👋 Déconnexion réussie');
 

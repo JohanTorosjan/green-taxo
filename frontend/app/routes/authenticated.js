@@ -22,7 +22,7 @@ export default class AuthenticatedRoute extends Route {
       // Sauvegarder l'URL qu'il voulait visiter
       // Pour le rediriger après la connexion
       const attemptedTransition = transition.to.name;
-      localStorage.setItem('redirectAfterLogin', attemptedTransition);
+      sessionStorage.setItem('redirectAfterLogin', attemptedTransition);
       
       // Rediriger vers la page de login
       this.router.transitionTo('login');
