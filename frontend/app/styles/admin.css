@@ -1,6 +1,6 @@
 .admin-container {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f8fafb 0%, #fff 100%);
+  background-color: var(--color-bg);
 }
 
 .admin-header {
@@ -75,6 +75,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  background-color: var(--color-bg);
 }
 
 /* Responsive */

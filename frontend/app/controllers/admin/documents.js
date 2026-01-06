@@ -29,7 +29,7 @@ export default class AdminDocumentsController extends Controller {
 
   async loadDocuments() {
     try {
-      console.log("📥 Chargement des documents...");
+      console.log("📥 Chargement des documents...");  
       let response = await fetch("http://localhost:8000/api/documents");
       if (!response.ok) throw new Error("Erreur API");
       this.documents = await response.json();

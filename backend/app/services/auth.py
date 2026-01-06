@@ -146,7 +146,7 @@ def get_all_users(conn) -> list:
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute("""
-        SELECT id, nom, prenom, email, admin, is_active, created_at, last_login
+        SELECT id, nom, prenom, email, admin, is_active, created_at, last_login,password
         FROM users 
         ORDER BY created_at DESC
     """)

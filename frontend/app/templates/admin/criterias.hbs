@@ -4,9 +4,13 @@
       <h1>Criteria Management</h1>
       <p class="header-subtitle">Manage and organize your evaluation criteria</p>
     </div>
-    <button class="btn btn-primary" type="button" {{on "click" this.openCreateModal}}>
-      <span class="btn-icon">+</span> Add Criterion
+            <div class="create-criteria-butt">
+                  <button class="btn btn-primary" type="button" {{on "click" this.openCreateModal}}>
+    + Add Criterion
     </button>
+            </div>
+
+
   </div>
 
   {{#if this.isLoading}}
@@ -59,12 +63,11 @@
       </div>
     {{else}}
       <div class="empty-state">
-        <div class="empty-icon">📋</div>
         <h3>No criteria found</h3>
         <p>Get started by creating your first evaluation criterion</p>
-        <button class="btn btn-primary" type="button" {{on "click" this.openCreateModal}}>
+        {{!-- <button class="btn btn-primary" type="button" {{on "click" this.openCreateModal}}>
           Create First Criterion
-        </button>
+        </button> --}}
       </div>
     {{/if}}
   {{/if}}

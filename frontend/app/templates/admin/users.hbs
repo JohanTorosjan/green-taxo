@@ -1,2 +1,196 @@
-{{page-title "Users"}}
-{{outlet}}
+{{!-- app/templates/admin/users.hbs --}}
+<div class="admin-users-container">
+
+  {{!-- ⭐ Messages de succès/erreur en haut de page --}}
+  {{#if this.successMessage}}
+    <div class="alert alert-success">
+      {{this.successMessage}}
+    </div>
+  {{/if}}
+
+  {{!-- Liste des utilisateurs --}}
+  <div class="users-list">
+    <div class="users-list-header">
+      <h1>Users ({{this.users.length}})</h1>
+      <div class="header-actions">
+        {{!-- ⭐ NOUVEAU : Bouton pour ouvrir la modale de création --}}
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          {{on "click" this.openCreateModal}}
+        >
+          + Add user
+        </button>
+      </div>
+    </div>
+
+    {{#if this.users.length}}
+      <table class="users-table">
+        <thead>
+          <tr>
+
+            <th>Lastname</th>
+            <th>Firstname</th>
+            <th>Email</th>
+            <th>Admin</th>
+            <th>Password</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each this.users as |user|}}
+            <tr class="{{if user.is_active 'user-active' 'user-inactive'}}">
+              <td>{{user.nom}}</td>
+              <td>{{user.prenom}}</td>
+              <td>{{user.email}}</td>
+              <td>
+                {{#if user.admin}}
+                  <span class="badge badge-admin">Admin</span>
+                {{else}}
+                  <span class="badge badge-user">User</span>
+                {{/if}}
+              </td>
+              <td>
+                <span class ='password-user'>
+                {{user.password}}             
+
+                </span>
+              </td>
+
+              <td class="actions-cell">
+                {{!-- ⭐ CHANGEMENT : Utiliser openEditModal --}}
+                <button class="btn-action btn-action-edit" type="button"                  {{on "click" (fn this.openEditModal user)}}
+>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M4 20h4l10.5-10.5a2.121 2.121 0 10-3-3L5 17v3z" />
+  </svg>
+
+</button>
+
+
+                
+                {{#if user.is_active}}
+                                <button class="btn-action btn-action-delete" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+                  {{!-- <button 
+                    type="button" 
+                    class="btn-icon btn-delete" 
+                    title="Désactiver"
+                  >
+                    🚫
+                  </button> --}}
+                {{else}}
+                  <button 
+                    type="button" 
+                    class="btn-icon btn-activate" 
+                    title="Activer"
+                  >
+                    ✅
+                  </button>
+                {{/if}}
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <div class="empty-state">
+        <p>Aucun utilisateur trouvé</p>
+      </div>
+    {{/if}}
+  </div>
+
+  {{!-- ⭐ NOUVEAU : Modale de création/modification --}}
+  <Modal 
+    @isOpen={{this.isModalOpen}} 
+    @onClose={{this.closeModal}}
+    @title={{if this.isEditing "Modifier un utilisateur" "Créer un utilisateur"}}
+  >
+    <form {{on "submit" this.handleSubmit}}>
+      <div class="form-group">
+        <label for="nom">Nom *</label>
+        <Input 
+          @type="text" 
+          @value={{this.newUser.nom}} 
+          id="nom"
+          required 
+          placeholder="Nom"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="prenom">Prénom *</label>
+        <Input 
+          @type="text" 
+          @value={{this.newUser.prenom}} 
+          id="prenom"
+          required 
+          placeholder="Prénom"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <Input 
+          @type="email" 
+          @value={{this.newUser.email}} 
+          id="email"
+          required 
+          placeholder="email@exemple.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">
+          Mot de passe {{if this.isEditing "(laisser vide pour ne pas changer)" "*"}}
+        </label>
+        <Input 
+          @type="password" 
+          @value={{this.newUser.password}} 
+          id="password"
+          required={{not this.isEditing}}
+          placeholder={{if this.isEditing "Laisser vide pour ne pas modifier" "Mot de passe"}}
+        />
+      </div>
+
+      <div class="form-group checkbox">
+        <label>
+          <Input 
+            @type="checkbox" 
+            @checked={{this.newUser.admin}} 
+          />
+          Administrateur
+        </label>
+      </div>
+
+      {{!-- Messages d'erreur dans la modale --}}
+      {{#if this.errorMessage}}
+        <div class="alert alert-error">
+          {{this.errorMessage}}
+        </div>
+      {{/if}}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" disabled={{this.isLoading}}>
+          {{if this.isLoading 
+            (if this.isEditing "Modification en cours..." "Création en cours...")
+            (if this.isEditing "Modifier" "Créer")
+          }}
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          {{on "click" this.cancelEdit}}
+          disabled={{this.isLoading}}
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
+  </Modal>
+</div>

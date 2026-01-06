@@ -1,0 +1,22 @@
+{{!-- app/components/modal.hbs --}}
+{{#if @isOpen}}
+  <div class="modal-backdrop" {{on "click" this.handleBackdropClick}}>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>{{@title}}</h2>
+        <button 
+          type="button" 
+          class="modal-close" 
+          {{on "click" this.handleClose}}
+          aria-label="Fermer"
+        >
+          ✕
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        {{yield}}
+      </div>
+    </div>
+  </div>
+{{/if}}

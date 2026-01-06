@@ -15,13 +15,13 @@
   padding-bottom: 20px;
   border-bottom: 2px solid #e5e7eb;
 }
-
+/* 
 .criterias-header h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 700;
   color: #1f2937;
-}
+} */
 
 /* Boutons */
 .btn {
@@ -410,14 +410,14 @@
   }
 
   .criterias-header {
-    flex-direction: column;
+    flex-direction: row;
     gap: 16px;
     align-items: flex-start;
   }
 
-  .criterias-header h1 {
+  /* .criterias-header h1 {
     font-size: 24px;
-  }
+  } */
 
   .criterias-header .btn {
     width: 100%;
