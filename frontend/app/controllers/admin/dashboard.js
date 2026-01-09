@@ -35,12 +35,12 @@ export default class AdminDashboardController extends Controller {
   get formattedDate() {
     if (!this.currentDate) return '';
     const date = new Date(this.currentDate);
-    return date.toLocaleDateString('fr-FR', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
     });
+
   }
 
   get hasSelectedAnalyses() {

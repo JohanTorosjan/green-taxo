@@ -2,7 +2,7 @@
 <div class="admin-dashboard">
   <div class="dashboard-header">
     <h1>Dashboard ({{this.analyses.length}})</h1>
-    {{!-- <p class="subtitle">Gestion des analyses</p> --}}
+    {{!-- <p class="subtitle">Analysis management</p> --}}
 <div class="days">
   <label class="checkbox-option">
     <input 
@@ -21,7 +21,7 @@
       checked={{this.specificDays}} 
       {{on "change" this.goToToday}}
     />
-    Specific days
+    Specific day
   </label>
 </div>
   </div>
@@ -30,48 +30,45 @@
     {{#unless this.allAnalyses}}
       <div class="date-navigation">
     <button type="button" {{on "click" this.previousDay}} class="btn-date">
-      ← Jour précédent
+      ←
     </button>
     
     <div class="current-date">
       <h2>{{this.formattedDate}}</h2>
-      <button type="button" {{on "click" this.goToToday}} class="btn-today">
-        Aujourd'hui
-      </button>
     </div>
 
     <button type="button" {{on "click" this.nextDay}} class="btn-date">
-      Jour suivant →
+      →
     </button>
   </div>
 
     {{/unless}}
     
-  {{! Navigation par date }}
+  {{! Date navigation }}
 
-  {{! Bouton d'export }}
+  {{! Export button }}
   {{#if this.hasSelectedAnalyses}}
     <div class="export-section">
       <button type="button" {{on "click" this.openExportModal}} class="btn-export">
-        Exporter {{this.selectedCount}} analyse(s) sélectionnée(s)
+        Export {{this.selectedCount}} selected analysis(es)
       </button>
     </div>
   {{/if}}
 
-  {{! Messages d'état }}
+  {{! Status messages }}
   {{#if this.isLoading}}
     <div class="loading-message">
-      <p>Chargement des analyses...</p>
+      <p>Loading analyses...</p>
     </div>
   {{/if}}
 
   {{#if this.error}}
     <div class="error-message">
-      <p>Erreur : {{this.error}}</p>
+      <p>Error: {{this.error}}</p>
     </div>
   {{/if}}
 
-  {{! Tableau des analyses }}
+  {{! Analyses table }}
   {{#unless this.isLoading}}
     {{#if this.analyses.length}}
       <div class="analyses-table-container">
@@ -85,12 +82,12 @@
                   checked={{this.allSelected}}
                 />
               </th>
-              <th>Nom</th>
-              <th>Date du document</th>
-              <th>Statut</th>
+              <th>Name</th>
+              <th>Document date</th>
+              <th>Status</th>
               <th>Score</th>
-              <th>Email utilisateur</th>
-              <th>Lien</th>
+              <th>User email</th>
+              <th>Link</th>
             </tr>
           </thead>
           <tbody>
@@ -127,7 +124,7 @@
                   {{#if analysis.user}}
                     {{analysis.user.email}}
                   {{else}}
-                    <em>Non assigné</em>
+                    <em>Not assigned</em>
                   {{/if}}
                 </td>
                 <td class="link-col">
@@ -136,7 +133,7 @@
                     {{on "click" (fn this.goToAnalysis analysis.id)}}
                     class="btn-link"
                   >
-                    Voir →
+                    →
                   </button>
                 </td>
               </tr>
@@ -146,16 +143,16 @@
       </div>
 
       <div class="table-footer">
-        <p>{{this.analyses.length}} analyse(s) trouvée(s)</p>
+        <p>{{this.analyses.length}} analysis(es) found</p>
       </div>
     {{else}}
       <div class="no-data-message">
-        <p>Aucune analyse pour cette date.</p>
+        <p>No analyses for this date.</p>
       </div>
     {{/if}}
   {{/unless}}
 
-  {{! Modale d'export }}
+  {{! Export modal }}
   {{#if this.showExportModal}}
     <ExportModal 
       @selectedCount={{this.selectedCount}}
