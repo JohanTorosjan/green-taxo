@@ -13,11 +13,23 @@ export default class AdminDashboardController extends Controller {
   @tracked isLoading = false;
   @tracked error = null;
   @tracked selectedAnalysesIds = [];
+  @tracked allAnalyses=true;
   @tracked showExportModal = false; // Nouvelle propriété
 
   constructor() {
     super(...arguments);
     this.selectedAnalysesIds = [];
+  }
+
+  get specificDays(){
+    return !this.allAnalyses;
+  }
+
+
+  @action toogleDays(){
+    if(this.allAnalyses){
+        this.loadAllAnalyses()
+    }
   }
 
   get formattedDate() {
@@ -46,6 +58,7 @@ export default class AdminDashboardController extends Controller {
 
   @action
   async loadAnalyses(date) {
+    this.allAnalyses = false;
     this.isLoading = true;
     this.error = null;
     this.currentDate = date;
@@ -76,12 +89,52 @@ export default class AdminDashboardController extends Controller {
     }
   }
 
+
+
+  @action
+  async loadAllAnalyses() {
+    this.isLoading = true;
+    this.error = null;
+    this.selectedAnalysesIds = [];
+    this.allAnalyses=true;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/admin/dashboard/fullanalyses`,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des analyses');
+      }
+
+      const data = await response.json();
+      this.analyses = data.analyses || [];
+      
+    } catch (error) {
+      this.error = error.message;
+      console.error('Erreur:', error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+
   @action
   previousDay() {
     const date = new Date(this.currentDate);
     date.setDate(date.getDate() - 1);
     const newDate = date.toISOString().split('T')[0];
     this.loadAnalyses(newDate);
+  }
+
+  @action 
+  loadAll(){
+    this.loadAllAnalyses()
   }
 
   @action

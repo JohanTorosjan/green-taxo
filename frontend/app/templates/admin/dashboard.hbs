@@ -3,10 +3,32 @@
   <div class="dashboard-header">
     <h1>Dashboard ({{this.analyses.length}})</h1>
     {{!-- <p class="subtitle">Gestion des analyses</p> --}}
+<div class="days">
+  <label class="checkbox-option">
+    <input 
+      type="radio" 
+      name="day-selection"
+      checked={{this.allAnalyses}} 
+      {{on "change" this.loadAll}}
+    />
+    All days
+  </label>
+  
+  <label class="checkbox-option">
+    <input 
+      type="radio" 
+      name="day-selection"
+      checked={{this.specificDays}} 
+      {{on "change" this.goToToday}}
+    />
+    Specific days
+  </label>
+</div>
   </div>
 
-  {{! Navigation par date }}
-  <div class="date-navigation">
+
+    {{#unless this.allAnalyses}}
+      <div class="date-navigation">
     <button type="button" {{on "click" this.previousDay}} class="btn-date">
       ← Jour précédent
     </button>
@@ -17,11 +39,15 @@
         Aujourd'hui
       </button>
     </div>
-    
+
     <button type="button" {{on "click" this.nextDay}} class="btn-date">
       Jour suivant →
     </button>
   </div>
+
+    {{/unless}}
+    
+  {{! Navigation par date }}
 
   {{! Bouton d'export }}
   {{#if this.hasSelectedAnalyses}}

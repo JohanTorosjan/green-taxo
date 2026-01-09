@@ -21,6 +21,7 @@ export default class AdminDashboardRoute extends Route {
     super.setupController(controller, model);
     
     // Charger les analyses du jour
-    controller.loadAnalyses(model.currentDate);
+    controller.loadAllAnalyses()
+    // controller.loadAnalyses(model.currentDate);
   }
 }
