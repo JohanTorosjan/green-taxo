@@ -7,6 +7,7 @@ thead th {
   text-align: initial;
   color: initial;
 }
+
 /* Header de la liste */
 .admin-users-container{
       max-width: 1200px;
@@ -17,6 +18,7 @@ thead th {
   background: var(--color-bg);
   min-height: 100vh;
 }
+
 .users-list-header {
   display: flex;
   justify-content: space-between;
@@ -33,7 +35,6 @@ thead th {
 .users-table {
   border-collapse: collapse;
   border-spacing: 0;
-    
   background: white;
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -41,22 +42,13 @@ thead th {
   width: 100%;
 }
 
-.users-table thead {
-      text-transform: none;
+.users-table thead {  text-transform: none;
   font-weight: normal;
   font-style: normal;
   letter-spacing: normal;
   text-align: initial;
-  color: initial;  text-transform: none;
-  font-weight: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  text-align: initial;
-  color: initial;
   background-color: #f8f9fa;
   min-width:100%;
-
-
         padding: var(--spacing-md) var(--spacing-lg);
     background: var(--color-bg);
     border-bottom: 1px solid var(--color-border);
@@ -66,7 +58,6 @@ thead th {
 }
 
 .users-table th {
-
   padding: 12px;
   text-align: left;
     text-transform: uppercase;

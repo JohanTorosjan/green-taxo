@@ -1,7 +1,131 @@
-{{page-title "Dashboard"}}
-{{outlet}}
+{{! frontend/app/templates/admin/dashboard.hbs }}
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <h1>Dashboard Administrateur</h1>
+    <p class="subtitle">Gestion des analyses</p>
+  </div>
 
+  {{! Navigation par date }}
+  <div class="date-navigation">
+    <button type="button" {{on "click" this.previousDay}} class="btn-date">
+      ← Jour précédent
+    </button>
+    
+    <div class="current-date">
+      <h2>{{this.formattedDate}}</h2>
+      <button type="button" {{on "click" this.goToToday}} class="btn-today">
+        Aujourd'hui
+      </button>
+    </div>
+    
+    <button type="button" {{on "click" this.nextDay}} class="btn-date">
+      Jour suivant →
+    </button>
+  </div>
 
-<h1>
-    TABLEAU d'analyse
-</h1>
+  {{! Bouton d'export }}
+  {{#if this.hasSelectedAnalyses}}
+    <div class="export-section">
+      <button type="button" {{on "click" this.exportSelected}} class="btn-export">
+        Exporter {{this.selectedCount}} analyse(s) sélectionnée(s)
+      </button>
+    </div>
+  {{/if}}
+
+  {{! Messages d'état }}
+  {{#if this.isLoading}}
+    <div class="loading-message">
+      <p>Chargement des analyses...</p>
+    </div>
+  {{/if}}
+
+  {{#if this.error}}
+    <div class="error-message">
+      <p>Erreur : {{this.error}}</p>
+    </div>
+  {{/if}}
+
+  {{! Tableau des analyses }}
+  {{#unless this.isLoading}}
+    {{#if this.analyses.length}}
+      <div class="analyses-table-container">
+        <table class="analyses-table">
+          <thead>
+            <tr>
+              <th class="checkbox-col">
+                <input 
+                  type="checkbox" 
+                  {{on "change" this.toggleAllAnalyses}}
+                  checked={{this.allSelected}}
+                />
+              </th>
+              <th>Nom</th>
+              <th>Date du document</th>
+              <th>Statut</th>
+              <th>Score</th>
+              <th>Email utilisateur</th>
+              <th>Lien</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this.analyses as |analysis|}}
+              <tr>
+                <td class="checkbox-col">
+                  <input 
+                    type="checkbox" 
+                    checked={{includes this.selectedAnalysesIds analysis.id}}
+                    {{on "change" (fn this.toggleAnalysisSelection analysis.id)}}
+                  />
+                </td>
+                <td class="name-col">{{analysis.name}}</td>
+                <td class="date-col">
+                  {{#if analysis.doc_date}}
+                    {{analysis.doc_date}}
+                  {{else}}
+                    -
+                  {{/if}}
+                </td>
+                <td class="status-col">
+                  <span class="status-badge status-{{analysis.analysis_status}}">
+                    {{analysis.analysis_status}}
+                  </span>
+                </td>
+                <td class="score-col">
+                  {{#if analysis.score}}
+                    {{analysis.score}}
+                  {{else}}
+                    -
+                  {{/if}}
+                </td>
+                <td class="email-col">
+                  {{#if analysis.user}}
+                    {{analysis.user.email}}
+                  {{else}}
+                    <em>Non assigné</em>
+                  {{/if}}
+                </td>
+                <td class="link-col">
+                  <button 
+                    type="button"
+                    {{on "click" (fn this.goToAnalysis analysis.id)}}
+                    class="btn-link"
+                  >
+                    Voir →
+                  </button>
+                </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <p>{{this.analyses.length}} analyse(s) trouvée(s)</p>
+      </div>
+    {{else}}
+      <div class="no-data-message">
+        <p>Aucune analyse pour cette date.</p>
+      </div>
+    {{/if}}
+  {{/unless}}
+</div>

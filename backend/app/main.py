@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form,Body
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import date
 from app.config import settings
 from app.services.documents import (
     upload_documents, 
@@ -16,6 +17,7 @@ from app.services.documents import (
 from app.services.analysis import(
         upload_analysis
 )
+from app.services.dashboard import get_analyses_by_date
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -545,3 +547,47 @@ async def get_user(user_id: int, admin_user: Dict[str, Any] = Depends(get_curren
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+    
+
+
+@app.get("/api/admin/dashboard/analyses")
+async def get_dashboard_analyses(
+    target_date: str,
+    # current_user: Dict[Any, Any] = Depends(get_current_admin_user)
+):
+    """
+    Récupère toutes les analyses pour une date donnée
+    Accessible uniquement aux administrateurs
+    
+    Args:
+        target_date: Date au format YYYY-MM-DD
+        current_user: Utilisateur actuel (doit être admin)
+        
+    Returns:
+        Liste des analyses avec informations utilisateur
+    """
+    try:
+        # Convertir la chaîne de date en objet date
+        parsed_date = date.fromisoformat(target_date)
+        print(target_date)
+        print(parsed_date)
+        # Récupérer les analyses
+        analyses = get_analyses_by_date(parsed_date)
+        
+        return {
+            "success": True,
+            "date": target_date,
+            "count": len(analyses),
+            "analyses": analyses
+        }
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Format de date invalide. Utilisez YYYY-MM-DD: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Erreur lors de la récupération des analyses: {str(e)}"
+        )
