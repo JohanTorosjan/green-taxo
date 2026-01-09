@@ -50,6 +50,11 @@ export default class ExportModalComponent extends Component {
   }
 
   @action
+  stopPropagation(event) {
+    event.stopPropagation();
+  }
+
+  @action
   toggleColumn(columnName) {
     this[columnName] = !this[columnName];
   }

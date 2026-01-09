@@ -1,8 +1,8 @@
 {{! frontend/app/templates/admin/dashboard.hbs }}
 <div class="admin-dashboard">
   <div class="dashboard-header">
-    <h1>Dashboard Administrateur</h1>
-    <p class="subtitle">Gestion des analyses</p>
+    <h1>Dashboard ({{this.analyses.length}})</h1>
+    {{!-- <p class="subtitle">Gestion des analyses</p> --}}
   </div>
 
   {{! Navigation par date }}
@@ -26,7 +26,7 @@
   {{! Bouton d'export }}
   {{#if this.hasSelectedAnalyses}}
     <div class="export-section">
-      <button type="button" {{on "click" this.exportSelected}} class="btn-export">
+      <button type="button" {{on "click" this.openExportModal}} class="btn-export">
         Exporter {{this.selectedCount}} analyse(s) sélectionnée(s)
       </button>
     </div>
@@ -128,4 +128,13 @@
       </div>
     {{/if}}
   {{/unless}}
+
+  {{! Modale d'export }}
+  {{#if this.showExportModal}}
+    <ExportModal 
+      @selectedCount={{this.selectedCount}}
+      @onClose={{this.closeExportModal}}
+      @onConfirm={{this.handleExportConfirm}}
+    />
+  {{/if}}
 </div>

@@ -1,31 +1,31 @@
 {{! frontend/app/components/export-modal.hbs }}
 <div class="modal-overlay" {{on "click" this.closeModal}}>
-  <div class="modal-content" {{on "click" (fn (mut this) (hash))}} role="dialog" aria-modal="true">
+  <div class="modal-content" {{on "click" this.stopPropagation}} role="dialog" aria-modal="true">
     <div class="modal-header">
-      <h2>Options d'export</h2>
-      <button type="button" class="modal-close" {{on "click" this.closeModal}} aria-label="Fermer">
+      <h2>Export Options</h2>
+      <button type="button" class="modal-close" {{on "click" this.closeModal}} aria-label="Close">
         ×
       </button>
     </div>
 
     <div class="modal-body">
       <p class="modal-description">
-        Sélectionnez les colonnes à inclure dans votre export ({{@selectedCount}} analyse(s) sélectionnée(s))
+        Select columns to include in your export ({{@selectedCount}} analysis(es) selected)
       </p>
 
-      {{! Actions rapides }}
+      {{! Quick actions }}
       <div class="quick-actions">
         <button type="button" class="btn-secondary" {{on "click" this.selectAll}}>
-          Tout sélectionner
+          Select All
         </button>
         <button type="button" class="btn-secondary" {{on "click" this.deselectAll}}>
-          Tout désélectionner
+          Deselect All
         </button>
       </div>
 
-      {{! Colonnes de base (cochées par défaut) }}
+      {{! Base columns (checked by default) }}
       <div class="export-section">
-        <h3>Colonnes principales</h3>
+        <h3>Main Columns</h3>
         <div class="checkbox-group">
           <label class="checkbox-label">
             <input 
@@ -42,7 +42,7 @@
               checked={{this.includeName}}
               {{on "change" (fn this.toggleColumn "includeName")}}
             />
-            <span>Nom</span>
+            <span>Name</span>
           </label>
 
           <label class="checkbox-label">
@@ -51,7 +51,7 @@
               checked={{this.includeCreatedAt}}
               {{on "change" (fn this.toggleColumn "includeCreatedAt")}}
             />
-            <span>Date de création</span>
+            <span>Creation Date</span>
           </label>
 
           <label class="checkbox-label">
@@ -60,7 +60,7 @@
               checked={{this.includeDocDate}}
               {{on "change" (fn this.toggleColumn "includeDocDate")}}
             />
-            <span>Date du document</span>
+            <span>Document Date</span>
           </label>
 
           <label class="checkbox-label">
@@ -69,7 +69,7 @@
               checked={{this.includeUserEmail}}
               {{on "change" (fn this.toggleColumn "includeUserEmail")}}
             />
-            <span>Email utilisateur</span>
+            <span>User Email</span>
           </label>
 
           <label class="checkbox-label">
@@ -83,9 +83,9 @@
         </div>
       </div>
 
-      {{! Colonnes JSON (non cochées par défaut) }}
+      {{! JSON columns (not checked by default) }}
       <div class="export-section">
-        <h3>Données JSON</h3>
+        <h3>JSON Data</h3>
         <div class="checkbox-group">
           <label class="checkbox-label">
             <input 
@@ -93,7 +93,7 @@
               checked={{this.includeFullResults}}
               {{on "change" (fn this.toggleColumn "includeFullResults")}}
             />
-            <span>Résultats complets (JSON)</span>
+            <span>Full Results (JSON)</span>
           </label>
 
           <label class="checkbox-label">
@@ -102,15 +102,15 @@
               checked={{this.includeCalculationModel}}
               {{on "change" (fn this.toggleColumn "includeCalculationModel")}}
             />
-            <span>Modèle de calcul (JSON)</span>
+            <span>Calculation Model (JSON)</span>
           </label>
         </div>
       </div>
 
-      {{! Fichiers séparés }}
+      {{! Separate files }}
       <div class="export-section export-section-separated">
-        <h3>Fichiers séparés</h3>
-        <p class="section-note">Ces options créeront des fichiers individuels pour chaque analyse</p>
+        <h3>Separate Files</h3>
+        <p class="section-note">These options will create individual files for each analysis</p>
         <div class="checkbox-group">
           <label class="checkbox-label">
             <input 
@@ -118,7 +118,7 @@
               checked={{this.exportResultsFiles}}
               {{on "change" (fn this.toggleColumn "exportResultsFiles")}}
             />
-            <span>Résultats (un fichier par analyse)</span>
+            <span>Results (one file per analysis)</span>
           </label>
 
           <label class="checkbox-label">
@@ -127,7 +127,7 @@
               checked={{this.exportCalculationFiles}}
               {{on "change" (fn this.toggleColumn "exportCalculationFiles")}}
             />
-            <span>Modèle de calcul (un fichier par analyse)</span>
+            <span>Calculation Model (one file per analysis)</span>
           </label>
 
           <label class="checkbox-label">
@@ -136,13 +136,13 @@
               checked={{this.exportJustificationFile}}
               {{on "change" (fn this.toggleColumn "exportJustificationFile")}}
             />
-            <span>Justification de sélection (fichier séparé)</span>
+            <span>Selection Justification (separate file)</span>
           </label>
         </div>
 
         {{#if this.hasAnySeparateFileSelected}}
           <div class="warning-note">
-            <strong>Note :</strong> L'export générera plusieurs fichiers dans une archive ZIP
+            <strong>Note:</strong> The export will generate multiple files in a ZIP archive
           </div>
         {{/if}}
       </div>
@@ -150,10 +150,10 @@
 
     <div class="modal-footer">
       <button type="button" class="btn-cancel" {{on "click" this.closeModal}}>
-        Annuler
+        Cancel
       </button>
       <button type="button" class="btn-confirm" {{on "click" this.confirmExport}}>
-        Exporter
+        Export
       </button>
     </div>
   </div>

@@ -12,9 +12,9 @@ export default class AdminDashboardController extends Controller {
   @tracked analyses = [];
   @tracked isLoading = false;
   @tracked error = null;
-  @tracked selectedAnalysesIds = []; // Utiliser un array au lieu d'un Set
+  @tracked selectedAnalysesIds = [];
+  @tracked showExportModal = false; // Nouvelle propriété
 
-  // Initialisation explicite
   constructor() {
     super(...arguments);
     this.selectedAnalysesIds = [];
@@ -49,15 +49,13 @@ export default class AdminDashboardController extends Controller {
     this.isLoading = true;
     this.error = null;
     this.currentDate = date;
-    this.selectedAnalysesIds = []; // Réinitialiser les sélections
+    this.selectedAnalysesIds = [];
 
     try {
-    //   const token = this.session.data.authenticated.token;
       const response = await fetch(
         `http://localhost:8000/api/admin/dashboard/analyses?target_date=${date}`,
         {
           headers: {
-            // 'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -112,10 +110,8 @@ export default class AdminDashboardController extends Controller {
   @action
   toggleAllAnalyses(event) {
     if (event.target.checked) {
-      // Sélectionner toutes les analyses
       this.selectedAnalysesIds = this.analyses.map(a => a.id);
     } else {
-      // Désélectionner toutes les analyses
       this.selectedAnalysesIds = [];
     }
   }
@@ -125,10 +121,57 @@ export default class AdminDashboardController extends Controller {
     this.router.transitionTo('analysis', { queryParams: { id: analysisId } });
   }
 
+  // Nouvelles actions pour la modale
   @action
-  exportSelected() {
-    // TODO: Implémenter la logique d'export
-    console.log('Export des analyses:', this.selectedAnalysesIds);
-    alert(`Export de ${this.selectedAnalysesIds.length} analyse(s) - À implémenter`);
+  openExportModal() {
+    this.showExportModal = true;
+  }
+
+  @action
+  closeExportModal() {
+    this.showExportModal = false;
+  }
+
+  @action
+  async handleExportConfirm(exportOptions) {
+    console.log('Options d\'export:', exportOptions);
+    console.log('Analyses à exporter:', this.selectedAnalysesIds);
+    
+    // Fermer la modale
+    this.closeExportModal();
+    
+    // TODO: Implémenter l'appel API pour l'export
+    try {
+      const response = await fetch('http://localhost:8000/api/admin/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          analysis_ids: this.selectedAnalysesIds,
+          export_options: exportOptions
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'export');
+      }
+
+      // Télécharger le fichier
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `export_analyses_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('Export réussi !');
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      alert('Erreur lors de l\'export: ' + error.message);
+    }
   }
 }
