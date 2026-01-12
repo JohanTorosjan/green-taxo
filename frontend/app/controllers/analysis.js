@@ -6,7 +6,8 @@ import { tracked } from '@glimmer/tracking';
 export default class AnalysisDetailController extends Controller {
   @service router;
   @service store;
-  
+  @service auth;
+
   @tracked isLoading = false;
   @tracked error = null;
   @tracked expandedCriteria = [];

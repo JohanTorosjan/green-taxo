@@ -13,34 +13,133 @@ export default class AdminDashboardController extends Controller {
   @tracked isLoading = false;
   @tracked error = null;
   @tracked selectedAnalysesIds = [];
-  @tracked allAnalyses=true;
-  @tracked showExportModal = false; // Nouvelle propriété
+  @tracked allAnalyses = true;
+  @tracked showExportModal = false;
+
+  // === NOUVEAUX FILTRES ===
+  @tracked filterName = '';
+  @tracked filterCompany = '';
+  @tracked filterEmail = '';
+  @tracked filterScoreMin = '';
+  @tracked filterScoreMax = '';
+  @tracked filterStatus = ''; // 'all', 'completed', 'pending', etc.
 
   constructor() {
     super(...arguments);
     this.selectedAnalysesIds = [];
   }
 
-  get specificDays(){
+  get specificDays() {
     return !this.allAnalyses;
   }
 
+  // === COMPUTED PROPERTY POUR FILTRER ===
+  get filteredAnalyses() {
+    let filtered = this.analyses;
 
-  @action toogleDays(){
-    if(this.allAnalyses){
-        this.loadAllAnalyses()
+    // Filtre par nom
+    if (this.filterName.trim()) {
+      const searchName = this.filterName.toLowerCase().trim();
+      filtered = filtered.filter(analysis => 
+        analysis.name?.toLowerCase().includes(searchName)
+      );
     }
+
+    // Filtre par company
+    if (this.filterCompany.trim()) {
+      const searchCompany = this.filterCompany.toLowerCase().trim();
+      filtered = filtered.filter(analysis => 
+        analysis.company?.toLowerCase().includes(searchCompany)
+      );
+    }
+
+    // Filtre par email
+    if (this.filterEmail.trim()) {
+      const searchEmail = this.filterEmail.toLowerCase().trim();
+      filtered = filtered.filter(analysis => 
+        analysis.user?.email?.toLowerCase().includes(searchEmail)
+      );
+    }
+
+    // Filtre par score minimum
+    if (this.filterScoreMin !== '') {
+      const minScore = parseFloat(this.filterScoreMin);
+      if (!isNaN(minScore)) {
+        filtered = filtered.filter(analysis => 
+          analysis.score !== null && analysis.score >= minScore
+        );
+      }
+    }
+
+    // Filtre par score maximum
+    if (this.filterScoreMax !== '') {
+      const maxScore = parseFloat(this.filterScoreMax);
+      if (!isNaN(maxScore)) {
+        filtered = filtered.filter(analysis => 
+          analysis.score !== null && analysis.score <= maxScore
+        );
+      }
+    }
+
+    // Filtre par status
+    if (this.filterStatus && this.filterStatus !== 'all') {
+      filtered = filtered.filter(analysis => 
+        analysis.analysis_status === this.filterStatus
+      );
+    }
+
+    return filtered;
+  }
+
+  // === ACTIONS POUR METTRE À JOUR LES FILTRES ===
+  @action
+  updateFilterName(event) {
+    this.filterName = event.target.value;
+  }
+
+  @action
+  updateFilterCompany(event) {
+    this.filterCompany = event.target.value;
+  }
+
+  @action
+  updateFilterEmail(event) {
+    this.filterEmail = event.target.value;
+  }
+
+  @action
+  updateFilterScoreMin(event) {
+    this.filterScoreMin = event.target.value;
+  }
+
+  @action
+  updateFilterScoreMax(event) {
+    this.filterScoreMax = event.target.value;
+  }
+
+  @action
+  updateFilterStatus(event) {
+    this.filterStatus = event.target.value;
+  }
+
+  @action
+  resetFilters() {
+    this.filterName = '';
+    this.filterCompany = '';
+    this.filterEmail = '';
+    this.filterScoreMin = '';
+    this.filterScoreMax = '';
+    this.filterStatus = '';
   }
 
   get formattedDate() {
     if (!this.currentDate) return '';
     const date = new Date(this.currentDate);
     return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit'
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
     });
-
   }
 
   get hasSelectedAnalyses() {
@@ -52,8 +151,15 @@ export default class AdminDashboardController extends Controller {
   }
 
   get allSelected() {
-    return this.analyses.length > 0 && 
-           this.selectedAnalysesIds.length === this.analyses.length;
+    return this.filteredAnalyses.length > 0 && 
+           this.selectedAnalysesIds.length === this.filteredAnalyses.length;
+  }
+
+  @action
+  toogleDays() {
+    if (this.allAnalyses) {
+      this.loadAllAnalyses();
+    }
   }
 
   @action
@@ -80,7 +186,6 @@ export default class AdminDashboardController extends Controller {
 
       const data = await response.json();
       this.analyses = data.analyses || [];
-      
     } catch (error) {
       this.error = error.message;
       console.error('Erreur:', error);
@@ -89,14 +194,12 @@ export default class AdminDashboardController extends Controller {
     }
   }
 
-
-
   @action
   async loadAllAnalyses() {
     this.isLoading = true;
     this.error = null;
     this.selectedAnalysesIds = [];
-    this.allAnalyses=true;
+    this.allAnalyses = true;
 
     try {
       const response = await fetch(
@@ -114,7 +217,6 @@ export default class AdminDashboardController extends Controller {
 
       const data = await response.json();
       this.analyses = data.analyses || [];
-      
     } catch (error) {
       this.error = error.message;
       console.error('Erreur:', error);
@@ -122,7 +224,6 @@ export default class AdminDashboardController extends Controller {
       this.isLoading = false;
     }
   }
-
 
   @action
   previousDay() {
@@ -133,8 +234,8 @@ export default class AdminDashboardController extends Controller {
   }
 
   @action 
-  loadAll(){
-    this.loadAllAnalyses()
+  loadAll() {
+    this.loadAllAnalyses();
   }
 
   @action
@@ -163,10 +264,16 @@ export default class AdminDashboardController extends Controller {
   @action
   toggleAllAnalyses(event) {
     if (event.target.checked) {
-      this.selectedAnalysesIds = this.analyses.map(a => a.id);
+      this.selectedAnalysesIds = this.filteredAnalyses.map(a => a.id);
     } else {
       this.selectedAnalysesIds = [];
     }
+  }
+
+  @action
+  toggleAllAnalysesButton(){
+      this.selectedAnalysesIds = this.filteredAnalyses.map(a => a.id);
+
   }
 
   @action
@@ -174,7 +281,6 @@ export default class AdminDashboardController extends Controller {
     this.router.transitionTo('analysis', { queryParams: { id: analysisId } });
   }
 
-  // Nouvelles actions pour la modale
   @action
   openExportModal() {
     this.showExportModal = true;
@@ -190,10 +296,8 @@ export default class AdminDashboardController extends Controller {
     console.log('Options d\'export:', exportOptions);
     console.log('Analyses à exporter:', this.selectedAnalysesIds);
     
-    // Fermer la modale
     this.closeExportModal();
     
-    // TODO: Implémenter l'appel API pour l'export
     try {
       const response = await fetch('http://localhost:8000/api/admin/export', {
         method: 'POST',
@@ -210,7 +314,6 @@ export default class AdminDashboardController extends Controller {
         throw new Error('Erreur lors de l\'export');
       }
 
-      // Télécharger le fichier
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

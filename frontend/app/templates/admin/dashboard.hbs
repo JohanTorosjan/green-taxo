@@ -1,56 +1,138 @@
 {{! frontend/app/templates/admin/dashboard.hbs }}
 <div class="admin-dashboard">
   <div class="dashboard-header">
-    <h1>Dashboard ({{this.analyses.length}})</h1>
-    {{!-- <p class="subtitle">Analysis management</p> --}}
-<div class="days">
-  <label class="checkbox-option">
-    <input 
-      type="radio" 
-      name="day-selection"
-      checked={{this.allAnalyses}} 
-      {{on "change" this.loadAll}}
-    />
-    All days
-  </label>
-  
-  <label class="checkbox-option">
-    <input 
-      type="radio" 
-      name="day-selection"
-      checked={{this.specificDays}} 
-      {{on "change" this.goToToday}}
-    />
-    Specific day
-  </label>
-</div>
-  </div>
-
-
-    {{#unless this.allAnalyses}}
-      <div class="date-navigation">
-    <button type="button" {{on "click" this.previousDay}} class="btn-date">
-      ←
-    </button>
-    
-    <div class="current-date">
-      <h2>{{this.formattedDate}}</h2>
+    <h1>Dashboard ({{this.filteredAnalyses.length}})</h1>
+    <div class="days">
+      <label class="checkbox-option">
+        <input 
+          type="radio" 
+          name="day-selection"
+          checked={{this.allAnalyses}} 
+          {{on "change" this.loadAll}}
+        />
+        All days
+      </label>
+      
+      <label class="checkbox-option">
+        <input 
+          type="radio" 
+          name="day-selection"
+          checked={{this.specificDays}} 
+          {{on "change" this.goToToday}}
+        />
+        Specific day
+      </label>
     </div>
-
-    <button type="button" {{on "click" this.nextDay}} class="btn-date">
-      →
-    </button>
   </div>
 
-    {{/unless}}
+  {{#unless this.allAnalyses}}
+    <div class="date-navigation">
+      <button type="button" {{on "click" this.previousDay}} class="btn-date">
+        ←
+      </button>
+      
+      <div class="current-date">
+        <h2>{{this.formattedDate}}</h2>
+      </div>
+
+      <button type="button" {{on "click" this.nextDay}} class="btn-date">
+        →
+      </button>
+    </div>
+  {{/unless}}
+
+  {{! === SECTION FILTRES === }}
+  <div class="filters-section">
+    <div class="filters-header">
+      <h3>Filters</h3>
+      <button type="button" {{on "click" this.resetFilters}} class="btn-reset-filters">
+        Reset filters
+      </button>
+    </div>
     
-  {{! Date navigation }}
+    <div class="filters-grid">
+      <div class="filter-item">
+        <label for="filter-name">Name</label>
+        <input 
+          type="text" 
+          id="filter-name"
+          value={{this.filterName}}
+          {{on "input" this.updateFilterName}}
+          placeholder="Search by name..."
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-company">Company</label>
+        <input 
+          type="text" 
+          id="filter-company"
+          value={{this.filterCompany}}
+          {{on "input" this.updateFilterCompany}}
+          placeholder="Search by company..."
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-email">User email</label>
+        <input 
+          type="text" 
+          id="filter-email"
+          value={{this.filterEmail}}
+          {{on "input" this.updateFilterEmail}}
+          placeholder="Search by email..."
+        />
+      </div>
+
+      <div class="filter-item">
+        <label for="filter-status">Status</label>
+        <select 
+          id="filter-status"
+          {{on "change" this.updateFilterStatus}}
+        >
+          <option value="">All statuses</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In progress</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+
+      <div class="filter-item filter-score">
+        <label>Score range</label>
+        <div class="score-inputs">
+          <input 
+            type="number" 
+            value={{this.filterScoreMin}}
+            {{on "input" this.updateFilterScoreMin}}
+            placeholder="Min"
+            step="0.1"
+          />
+          <span class="separator">-</span>
+          <input 
+            type="number" 
+            value={{this.filterScoreMax}}
+            {{on "input" this.updateFilterScoreMax}}
+            placeholder="Max"
+            step="0.1"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 
   {{! Export button }}
   {{#if this.hasSelectedAnalyses}}
     <div class="export-section">
       <button type="button" {{on "click" this.openExportModal}} class="btn-export">
         Export {{this.selectedCount}} selected analysis(es)
+      </button>
+    </div>
+
+{{else}}
+    <div class="export-section">
+      <button type="button" {{on "click" this.toggleAllAnalysesButton}} class="btn-export">
+        Select all 
       </button>
     </div>
   {{/if}}
@@ -70,7 +152,7 @@
 
   {{! Analyses table }}
   {{#unless this.isLoading}}
-    {{#if this.analyses.length}}
+    {{#if this.filteredAnalyses.length}}
       <div class="analyses-table-container">
         <table class="analyses-table">
           <thead>
@@ -92,7 +174,7 @@
             </tr>
           </thead>
           <tbody>
-            {{#each this.analyses as |analysis|}}
+            {{#each this.filteredAnalyses as |analysis|}}
               <tr>
                 <td class="checkbox-col">
                   <input 
@@ -129,7 +211,7 @@
                   {{/if}}
                 </td>
                 <td class="company-col">
-                    {{analysis.company}}
+                  {{analysis.company}}
                 </td>
                 <td class="link-col">
                   <button 
@@ -147,11 +229,18 @@
       </div>
 
       <div class="table-footer">
-        <p>{{this.analyses.length}} analysis(es) found</p>
+        <p>{{this.filteredAnalyses.length}} analysis(es) found{{#if this.analyses.length}} ({{this.analyses.length}} total){{/if}}</p>
       </div>
     {{else}}
       <div class="no-data-message">
-        <p>No analyses for this date.</p>
+        {{#if this.analyses.length}}
+          <p>No analyses match your filters.</p>
+          <button type="button" {{on "click" this.resetFilters}} class="btn-reset-filters">
+            Reset filters
+          </button>
+        {{else}}
+          <p>No analyses for this date.</p>
+        {{/if}}
       </div>
     {{/if}}
   {{/unless}}

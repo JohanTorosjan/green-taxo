@@ -170,8 +170,8 @@
       {{/each}}
     </div>
   </div>
-
   {{!-- Metadata --}}
+  {{#if this.auth.currentUser.admin}}
   <div class="metadata-section">
     <h3>ℹ️ Information</h3>
     <div class="metadata-grid">
@@ -206,6 +206,7 @@
       {{/if}}
     </div>
   </div>
+  {{/if}}
 </div>
 
 <style scoped>
