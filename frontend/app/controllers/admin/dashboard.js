@@ -291,43 +291,43 @@ export default class AdminDashboardController extends Controller {
     this.showExportModal = false;
   }
 
-  @action
-  async handleExportConfirm(exportOptions) {
-    console.log('Options d\'export:', exportOptions);
-    console.log('Analyses à exporter:', this.selectedAnalysesIds);
-    
-    this.closeExportModal();
-    
-    try {
-      const response = await fetch('http://localhost:8000/api/admin/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          analysis_ids: this.selectedAnalysesIds,
-          export_options: exportOptions
-        })
-      });
+@action
+async handleExportConfirm(exportOptions) {
+  console.log('Options d\'export:', exportOptions);
+  console.log('Analyses à exporter:', this.selectedAnalysesIds);
+  
+  this.closeExportModal();
+  
+  try {
+    const response = await fetch('http://localhost:8000/api/admin/export', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        analysis_ids: this.selectedAnalysesIds,
+        export_options: exportOptions
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'export');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `export_analyses_${new Date().toISOString().split('T')[0]}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      alert('Export réussi !');
-    } catch (error) {
-      console.error('Erreur lors de l\'export:', error);
-      alert('Erreur lors de l\'export: ' + error.message);
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'export');
     }
+
+    // Créer un blob et déclencher le téléchargement
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `export_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de l\'export');
   }
+}
 }

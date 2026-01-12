@@ -635,3 +635,143 @@ async def get_dashboard_full_analyses(
             status_code=500, 
             detail=f"Erreur lors de la récupération des analyses: {str(e)}"
         )
+    
+
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from typing import List, Dict
+import csv
+import io
+from datetime import datetime
+
+# Modèle Pydantic pour la requête
+class ExportRequest(BaseModel):
+    analysis_ids: List[int]
+    export_options: Dict
+
+@app.post("/api/admin/export")
+async def export_analysis(request: ExportRequest):
+    """
+    Exporte les analyses sélectionnées en fonction des colonnes choisies
+    """
+    try:
+        analysis_ids = request.analysis_ids
+        columns_config = request.export_options.get('columns', {})
+        
+        # Vérifier qu'il y a des analyses à exporter
+        if not analysis_ids:
+            raise HTTPException(status_code=400, detail="Aucune analyse sélectionnée")
+        
+        # Construire la liste des colonnes à inclure dans la requête SQL
+        sql_columns = []
+        csv_headers = []
+        
+        if columns_config.get('id'):
+            sql_columns.append('a.id')
+            csv_headers.append('ID')
+        
+        if columns_config.get('name'):
+            sql_columns.append('a.name')
+            csv_headers.append('Name')
+        
+        if columns_config.get('created_at'):
+            sql_columns.append('a.created_at')
+            csv_headers.append('Creation Date')
+        
+        if columns_config.get('doc_date'):
+            sql_columns.append('a.doc_date')
+            csv_headers.append('Document Date')
+        
+        if columns_config.get('user_email'):
+            sql_columns.append('u.email')
+            csv_headers.append('User Email')
+        
+        if columns_config.get('company'):
+            sql_columns.append('a.company')
+            csv_headers.append('Company')
+        
+        if columns_config.get('score'):
+            sql_columns.append('a.score')
+            csv_headers.append('Score')
+        
+        if columns_config.get('full_results'):
+            sql_columns.append('a.analysis_results')
+            csv_headers.append('Full Results (JSON)')
+        
+        if columns_config.get('calculation_model'):
+            sql_columns.append('a.calculation_model')
+            csv_headers.append('Calculation Model (JSON)')
+        
+        # Vérifier qu'au moins une colonne est sélectionnée
+        if not sql_columns:
+            raise HTTPException(status_code=400, detail="Aucune colonne sélectionnée")
+        
+        # Construire la requête SQL
+        columns_str = ', '.join(sql_columns)
+        placeholders = ', '.join(['%s'] * len(analysis_ids))
+        
+        query = f"""
+            SELECT {columns_str}
+            FROM analysis a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.id IN ({placeholders})
+            ORDER BY a.id
+        """
+        
+        # Exécuter la requête
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cur.execute(query, analysis_ids)
+        results = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        # Vérifier qu'on a des résultats
+        if not results:
+            raise HTTPException(status_code=404, detail="Aucune analyse trouvée")
+        
+        # Créer le CSV en mémoire
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Écrire les en-têtes
+        writer.writerow(csv_headers)
+        
+        # Écrire les données
+        for row in results:
+            csv_row = []
+            for col in row.values():
+                if col is None:
+                    csv_row.append('')
+                elif isinstance(col, datetime):
+                    csv_row.append(col.strftime('%Y-%m-%d %H:%M:%S'))
+                elif isinstance(col, dict):
+                    # Convertir les JSON en chaîne
+                    import json
+                    csv_row.append(json.dumps(col, ensure_ascii=False))
+                else:
+                    csv_row.append(str(col))
+            writer.writerow(csv_row)
+        
+        # Préparer la réponse
+        output.seek(0)
+        
+        # Générer un nom de fichier avec timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"export_analysis_{timestamp}.csv"
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8-sig')),  # utf-8-sig pour Excel
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
