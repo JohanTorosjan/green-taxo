@@ -15,7 +15,7 @@ def get_db_connection():
     return conn
 
 
-async def upload_analysis(name, doc_date, file, user_id):  # ← AJOUT de user_id
+async def upload_analysis(name, doc_date, file,company, user_id):  # ← AJOUT de user_id
     """
     Upload un rapport et déclenche l'analyse asynchrone
     """
@@ -28,10 +28,10 @@ async def upload_analysis(name, doc_date, file, user_id):  # ← AJOUT de user_i
         # Insérer le document avec le statut initial 'pending'
         # Insérer le document avec le statut initial 'pending' et le user_id
         cur.execute("""
-            INSERT INTO analysis (name, doc_date, file_data, analysis_status, user_id)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO analysis (name, doc_date, file_data, analysis_status, company,user_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING id, name, doc_date, analysis_status, user_id, created_at, updated_at
-        """, (name, doc_date, psycopg2.Binary(file_bytes), 'pending', user_id))  # ← AJOUT user_id
+        """, (name, doc_date, psycopg2.Binary(file_bytes), 'pending',company, user_id))  # ← AJOUT user_id
         
 
         new_analysis = cur.fetchone()

@@ -237,6 +237,7 @@ async def update_document(doc_id: int, update_data: dict = Body(...)):
 async def create_analysis(
     name: str = Form(...),
     doc_date: str = Form(...),
+    company: str = Form(...),
     file: UploadFile = File(...),
     current_user: Dict[str, Any] = Depends(get_current_user)  # ← AJOUT ICI
 ):
@@ -247,9 +248,9 @@ async def create_analysis(
     try:
         print('upload_analysis')
         print(f'User connecté: {current_user["email"]} (ID: {current_user["id"]})')
-        
+        print(company)
         # Passer le user_id à la fonction upload_analysis
-        result = await upload_analysis(name, doc_date, file, current_user['id'])
+        result = await upload_analysis(name, doc_date, file,company, current_user['id'])
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'insertion : {str(e)}")

@@ -87,6 +87,7 @@
               <th>Status</th>
               <th>Score</th>
               <th>User email</th>
+              <th>Company</th>
               <th>Link</th>
             </tr>
           </thead>
@@ -126,6 +127,9 @@
                   {{else}}
                     <em>Not assigned</em>
                   {{/if}}
+                </td>
+                <td class="company-col">
+                    {{analysis.company}}
                 </td>
                 <td class="link-col">
                   <button 

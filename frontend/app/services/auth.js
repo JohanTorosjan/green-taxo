@@ -72,7 +72,6 @@ export default class AuthService extends Service {
         sessionStorage.removeItem('redirectAfterLogin');
         this.router.transitionTo(redirectTo);
       }
-debugger
       return data.user;
     } catch (error) {
       console.error('❌ Erreur de connexion:', error);

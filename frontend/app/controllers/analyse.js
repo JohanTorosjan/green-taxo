@@ -107,10 +107,10 @@ export default class AnalyseController extends Controller {
     formData.append("name", this.documentName);
     formData.append("doc_date", this.documentDate);
     formData.append("file", this.selectedFile);
-
+      formData.append("company",this.companyName)
       console.log("📤 Envoi du rapport...");
         const token = this.auth.token;
-
+          
       let response = await fetch("http://localhost:8000/api/analysis", {
         method: "POST",
         headers: {

@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS analysis (
     
     -- Champs pour l'analyse LLM
     analysis_status VARCHAR(50) DEFAULT 'pending',
+    company VARCHAR(255),
     task_id VARCHAR(255),
     
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -122,5 +123,9 @@ CREATE INDEX IF NOT EXISTS idx_analysis_user_id ON analysis(user_id);
 
 -- Créer un utilisateur admin par défaut
 INSERT INTO users (nom, prenom, email, password, admin) 
-VALUES ('Admin', 'Système', 'admin@greentaxo.local', 'admin123', TRUE)
+VALUES ('Admin', 'Système', 'a@a.a', 'a', TRUE)
+ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO users (nom, prenom, email, password, admin) 
+VALUES ('client', 'c', 'c@c.c', 'c', FALSE)
 ON CONFLICT (email) DO NOTHING;
