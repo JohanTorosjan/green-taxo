@@ -12,6 +12,11 @@ export default class AnalysisDetailController extends Controller {
   @tracked error = null;
   @tracked expandedCriteria = [];
   @tracked pollingInterval = null;
+    @tracked showExportModal = false;
+
+
+
+    
 
   get scorePercentage() {
     const analysis = this.model;
@@ -183,6 +188,145 @@ get displayedDate() {
   get isProcessing() {
   const status = this.model.analysis_status;
   return status === 'pending' || status === 'processing';
+}
+
+
+  @action
+  openExportModal() {
+    this.showExportModal = true;
+  }
+
+    @action
+  closeExportModal() {
+    this.showExportModal = false;
+  }
+
+
+
+
+@action
+async handleExportConfirm(exportOptions) {
+  console.log('Options d\'export:', exportOptions);
+  console.log('Analyses à exporter:', this.model.id);
+  
+  this.closeExportModal();
+  
+  try {
+    const response = await fetch('http://localhost:8000/api/admin/export', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        analysis_ids: [this.model.id],
+        export_options: exportOptions
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'export');
+    }
+
+    // Créer un blob et déclencher le téléchargement
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `export_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+if(exportOptions.separateFiles.results){
+  const response = await fetch('http://localhost:8000/api/admin/exportResultsFiles', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      analysis_ids: [this.model.id],
+      export_options: exportOptions
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de l\'export des résultats');
+  }
+
+  // Télécharger le ZIP
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `export_results_${Date.now()}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+if(exportOptions.separateFiles.calculationModel){
+  const response = await fetch('http://localhost:8000/api/admin/exportCalculationModel', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      analysis_ids: [this.model.id],
+      export_options: exportOptions
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de l\'export des résultats');
+  }
+
+  // Télécharger le ZIP
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `calculation_model_${Date.now()}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+if(exportOptions.separateFiles.justification){
+  const response = await fetch('http://localhost:8000/api/admin/exportJustifications', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      analysis_ids: [this.model.id],
+      export_options: exportOptions
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de l\'export des résultats');
+  }
+
+  // Télécharger le ZIP
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `justifications_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur lors de l\'export');
+  }
 }
 }
 

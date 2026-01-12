@@ -155,3 +155,56 @@ def get_all_users(conn) -> list:
     cur.close()
     
     return users
+
+def update_user_db(conn, user_id: int, user_data: Dict[str, Any]) -> dict:
+    """
+    Met à jour un utilisateur dans la base de données
+    """
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Construction dynamique de la requête selon les champs fournis
+    update_fields = []
+    values = []
+    
+    if 'nom' in user_data:
+        update_fields.append("nom = %s")
+        values.append(user_data['nom'])
+    
+    if 'prenom' in user_data:
+        update_fields.append("prenom = %s")
+        values.append(user_data['prenom'])
+    
+    if 'email' in user_data:
+        update_fields.append("email = %s")
+        values.append(user_data['email'])
+    
+    if 'admin' in user_data:
+        update_fields.append("admin = %s")
+        values.append(user_data['admin'])
+    
+    
+    if 'is_active' in user_data:
+        update_fields.append("is_active = %s")
+        values.append(user_data['is_active'])
+    
+    if not update_fields:
+        cur.close()
+        raise ValueError("Aucun champ à mettre à jour")
+    
+    # Ajouter l'ID à la fin des valeurs
+    values.append(user_id)
+    
+    # Construire et exécuter la requête
+    query = f"""
+        UPDATE users 
+        SET {', '.join(update_fields)}
+        WHERE id = %s
+        RETURNING id, nom, prenom, email, admin, is_active, created_at, last_login
+    """
+    
+    cur.execute(query, values)
+    updated_user = cur.fetchone()
+    conn.commit()
+    cur.close()
+    
+    return updated_user

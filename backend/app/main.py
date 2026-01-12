@@ -28,7 +28,7 @@ import json
 
 # À ajouter en haut de main.py avec les autres imports
 from pydantic import BaseModel
-from app.services.auth import login_user, create_user, get_user_by_id, get_all_users
+from app.services.auth import login_user, create_user, get_user_by_id, get_all_users, update_user_db
 from app.dependencies import get_current_user, get_current_admin_user
 from typing import Dict, Any
 from fastapi import Depends
@@ -554,6 +554,89 @@ async def get_user(user_id: int, admin_user: Dict[str, Any] = Depends(get_curren
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
     
+
+@app.put("/api/users/{user_id}")
+async def update_user(
+    user_id: int,
+    user_data: Dict[str, Any],
+    admin_user: Dict[str, Any] = Depends(get_current_admin_user)
+):
+    """
+    Modifie un utilisateur (réservé aux admins)
+    """
+    try:
+        conn = get_db_connection()
+        
+        # Vérifier que l'utilisateur existe
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT id FROM users WHERE id = %s", (user_id,))
+        existing_user = cur.fetchone()
+        cur.close()
+        
+        if not existing_user:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Mettre à jour l'utilisateur
+        updated_user = update_user_db(conn, user_id, user_data)
+        conn.close()
+        
+        return updated_user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+
+
+@app.patch("/api/users/{user_id}/deactivate")
+async def deactivate_user(
+    user_id: int,
+    admin_user: Dict[str, Any] = Depends(get_current_admin_user)
+):
+    """
+    Désactive un utilisateur (réservé aux admins)
+    """
+    try:
+        conn = get_db_connection()
+        
+        # Vérifier que l'utilisateur existe
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT id, is_active FROM users WHERE id = %s", (user_id,))
+        existing_user = cur.fetchone()
+        
+        if not existing_user:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        if not existing_user['is_active']:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=400, detail="L'utilisateur est déjà désactivé")
+        
+        # Désactiver l'utilisateur
+        cur.execute("""
+            UPDATE users 
+            SET is_active = FALSE
+            WHERE id = %s
+            RETURNING id, nom, prenom, email, admin, is_active, created_at, last_login
+        """, (user_id,))
+        
+        updated_user = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "message": "User successfully deleted",
+            "user": updated_user
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
 
 @app.get("/api/admin/dashboard/analyses")

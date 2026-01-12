@@ -71,7 +71,7 @@
 
                 
                 {{#if user.is_active}}
-                                <button class="btn-action btn-action-delete" type="button">
+                    <button class="btn-action btn-action-delete" type="button" {{on "click" (fn this.deleteUser user)}} >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
@@ -108,28 +108,28 @@
   <Modal 
     @isOpen={{this.isModalOpen}} 
     @onClose={{this.closeModal}}
-    @title={{if this.isEditing "Modifier un utilisateur" "Créer un utilisateur"}}
+    @title={{if this.isEditing "Update User" "Create User"}}
   >
     <form {{on "submit" this.handleSubmit}}>
       <div class="form-group">
-        <label for="nom">Nom *</label>
+        <label for="nom">Lastname *</label>
         <Input 
           @type="text" 
           @value={{this.newUser.nom}} 
           id="nom"
           required 
-          placeholder="Nom"
+          placeholder="Lastname"
         />
       </div>
 
       <div class="form-group">
-        <label for="prenom">Prénom *</label>
+        <label for="prenom">Firstname *</label>
         <Input 
           @type="text" 
           @value={{this.newUser.prenom}} 
           id="prenom"
           required 
-          placeholder="Prénom"
+          placeholder="Firstname"
         />
       </div>
 
@@ -143,19 +143,20 @@
           placeholder="email@exemple.com"
         />
       </div>
-
+  {{#unless this.isEditing}}
       <div class="form-group">
         <label for="password">
-          Mot de passe {{if this.isEditing "(laisser vide pour ne pas changer)" "*"}}
+          Passkey *
         </label>
         <Input 
           @type="password" 
           @value={{this.newUser.password}} 
           id="password"
           required={{not this.isEditing}}
-          placeholder={{if this.isEditing "Laisser vide pour ne pas modifier" "Mot de passe"}}
+          placeholder="You will not be able to update this later"
         />
       </div>
+      {{/unless}}
 
       <div class="form-group checkbox">
         <label>
@@ -163,7 +164,7 @@
             @type="checkbox" 
             @checked={{this.newUser.admin}} 
           />
-          Administrateur
+          Admin
         </label>
       </div>
 
@@ -177,18 +178,18 @@
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" disabled={{this.isLoading}}>
           {{if this.isLoading 
-            (if this.isEditing "Modification en cours..." "Création en cours...")
-            (if this.isEditing "Modifier" "Créer")
+            (if this.isEditing "Updating..." "Creation...")
+            (if this.isEditing "Update" "Create")
           }}
         </button>
         
         <button 
           type="button" 
-          class="btn btn-secondary" 
+          class="btn btn-secondary btn-cancel" 
           {{on "click" this.cancelEdit}}
           disabled={{this.isLoading}}
         >
-          Annuler
+          Cancel
         </button>
       </div>
     </form>

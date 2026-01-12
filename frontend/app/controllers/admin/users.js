@@ -33,7 +33,7 @@ export default class AdminUsersController extends Controller {
   }
 
   get users() {
-    return this.usersList;
+    return this.usersList.filter(user => user.is_active);
   }
 
   /**
@@ -162,7 +162,7 @@ export default class AdminUsersController extends Controller {
       throw new Error(data.detail || 'Erreur lors de la modification de l\'utilisateur');
     }
     
-    this.successMessage = `Utilisateur ${data.prenom} ${data.nom} modifié avec succès !`;
+    this.successMessage = `Utilisateur ${data.prenom} ${data.nom} updated !`;
     await this.refreshUsers();
     
     setTimeout(() => {
@@ -245,5 +245,31 @@ export default class AdminUsersController extends Controller {
   @action
   cancelEdit() {
     this.closeModal();
+  }
+
+
+  @action
+  async deleteUser(user){
+    if (!confirm('Are you sure you want to delete this user ?')) {
+      return;
+    }
+      const token = this.auth.token;
+  
+  const response = await fetch(`http://localhost:8000/api/users/${user.id}/deactivate`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.detail || 'Erreur lors de la désactivation');
+  }
+  
+  this.successMessage = data.message;
+  await this.refreshUsers();
+    
   }
 }
