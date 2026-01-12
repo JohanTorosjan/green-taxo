@@ -11,6 +11,7 @@ export default class ExportModalComponent extends Component {
   @tracked includeDocDate = true;
   @tracked includeUserEmail = true;
   @tracked includeScore = true;
+  @tracked includeCompany = true;
 
   // Colonnes JSON non cochées par défaut
   @tracked includeFullResults = false;
@@ -30,6 +31,7 @@ export default class ExportModalComponent extends Component {
         created_at: this.includeCreatedAt,
         doc_date: this.includeDocDate,
         user_email: this.includeUserEmail,
+        company: this.includeCompany,
         score: this.includeScore,
         full_results: this.includeFullResults,
         calculation_model: this.includeCalculationModel

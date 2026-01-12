@@ -14,14 +14,14 @@
       </p>
 
       {{! Quick actions }}
-      <div class="quick-actions">
+      {{!-- <div class="quick-actions">
         <button type="button" class="btn-secondary" {{on "click" this.selectAll}}>
           Select All
         </button>
         <button type="button" class="btn-secondary" {{on "click" this.deselectAll}}>
           Deselect All
         </button>
-      </div>
+      </div> --}}
 
       {{! Base columns (checked by default) }}
       <div class="export-section">
@@ -71,6 +71,17 @@
             />
             <span>User Email</span>
           </label>
+
+
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              checked={{this.includeCompany}}
+              {{on "change" (fn this.toggleColumn "includeCompany")}}
+            />
+            <span>Company</span>
+          </label>
+
 
           <label class="checkbox-label">
             <input 
