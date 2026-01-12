@@ -123,9 +123,9 @@ CREATE INDEX IF NOT EXISTS idx_analysis_user_id ON analysis(user_id);
 
 -- Créer un utilisateur admin par défaut
 INSERT INTO users (nom, prenom, email, password, admin) 
-VALUES ('Admin', 'Système', 'a@a.a', 'a', TRUE)
+VALUES ('Admin', 'Test', 'admin@greentaxo.fr', 'admin123', TRUE)
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (nom, prenom, email, password, admin) 
-VALUES ('client', 'c', 'c@c.c', 'c', FALSE)
+VALUES ('User', 'Test', 'user@greentaxo.fr', 'user123', FALSE)
 ON CONFLICT (email) DO NOTHING;
