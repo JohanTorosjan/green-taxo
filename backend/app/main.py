@@ -288,9 +288,11 @@ async def get_analysis(analysis_id: int):
                 score,
                 calculation_model,
                 analysis_results,
+                company,
                 task_id,
                 created_at,
-                updated_at
+                updated_at,
+                user_id
             FROM analysis
             WHERE id = %s
         """, (analysis_id,))
@@ -324,10 +326,12 @@ async def get_analysis(analysis_id: int):
             "analysis_status": analysis['analysis_status'],
             "score": analysis['score'],
             "task_id": analysis['task_id'],
+            "company":analysis['company'],
             "created_at": analysis['created_at'].isoformat() if analysis['created_at'] else None,
             "updated_at": analysis['updated_at'].isoformat() if analysis['updated_at'] else None,
             "calculation_model": calc_model,
-            "analysis_results": analysis_res
+            "analysis_results": analysis_res,
+            "user_id":analysis['user_id']
         }
         
         logger.info(f"✅ Analyse {analysis_id} récupérée avec succès")

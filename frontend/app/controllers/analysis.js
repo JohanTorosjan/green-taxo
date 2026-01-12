@@ -18,6 +18,17 @@ export default class AnalysisDetailController extends Controller {
     return analysis?.score ? Math.round(analysis.score) : 0;
   }
 
+
+get displayedDate() {
+  const date = new Date(this.model.created_at);
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+
+  return `${day}/${month}/${year}`;
+}
+
   get analysisStatus(){
     const analysis_status = this?.model.analysis_status;
     
