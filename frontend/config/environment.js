@@ -14,10 +14,12 @@ module.exports = function (environment) {
       },
     },
 
+    // ⬇️ AJOUTE CES LIGNES ICI
     APP: {
-      // Here you can pass flags/options to your application instance
-      // when it is created
+      apiUrl: process.env.API_HOST || 'http://localhost:8000'
     },
+    // ⬆️ FIN DE L'AJOUT
+
   };
 
   if (environment === 'development') {

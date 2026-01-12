@@ -2,6 +2,7 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import ENV from 'frontend/config/environment';
 
 export default class AnalyseController extends Controller {
   @tracked showModal = false;
@@ -111,7 +112,7 @@ export default class AnalyseController extends Controller {
       console.log("📤 Envoi du rapport...");
         const token = this.auth.token;
           
-      let response = await fetch("http://localhost:8000/api/analysis", {
+      let response = await fetch(`${ENV.APP.apiUrl}/api/analysis`, {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`, // ← À répéter partout

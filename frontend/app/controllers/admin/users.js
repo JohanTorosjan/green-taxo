@@ -3,6 +3,7 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import ENV from 'frontend/config/environment';
 
 export default class AdminUsersController extends Controller {
   @service auth;
@@ -104,7 +105,7 @@ export default class AdminUsersController extends Controller {
   async createUser() {
     const token = this.auth.token;
     
-    const response = await fetch('http://localhost:8000/api/auth/register', {
+    const response = await fetch(`${ENV.APP.apiUrl}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -147,7 +148,7 @@ export default class AdminUsersController extends Controller {
       updateData.password = this.newUser.password;
     }
     
-    const response = await fetch(`http://localhost:8000/api/users/${this.editingUserId}`, {
+    const response = await fetch(`${ENV.APP.apiUrl}/api/users/${this.editingUserId}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -175,7 +176,7 @@ export default class AdminUsersController extends Controller {
     try {
       const token = this.auth.token;
       
-      const response = await fetch('http://localhost:8000/api/users', {
+      const response = await fetch(`${ENV.APP.apiUrl}/api/users`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -255,7 +256,7 @@ export default class AdminUsersController extends Controller {
     }
       const token = this.auth.token;
   
-  const response = await fetch(`http://localhost:8000/api/users/${user.id}/deactivate`, {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/users/${user.id}/deactivate`, {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${token}`

@@ -2,6 +2,7 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import ENV from 'frontend/config/environment';
 
 export default class AdminDocumentsController extends Controller {
   @tracked isModalOpen = false;
@@ -30,7 +31,7 @@ export default class AdminDocumentsController extends Controller {
   async loadDocuments() {
     try {
       console.log("📥 Chargement des documents...");  
-      let response = await fetch("http://localhost:8000/api/documents");
+      let response = await fetch(`${ENV.APP.apiUrl}/api/documents`);
       if (!response.ok) throw new Error("Erreur API");
       this.documents = await response.json();
       console.log("✅ Documents chargés:", this.documents);
@@ -77,7 +78,7 @@ export default class AdminDocumentsController extends Controller {
 
   async checkAnalysisStatus(docId) {
     try {
-      let response = await fetch(`http://localhost:8000/api/documents/${docId}/analysis`);
+      let response = await fetch(`${ENV.APP.apiUrl}/api/documents/${docId}/analysis`);
       if (!response.ok) throw new Error("Erreur API analyse");
       
       let analysisData = await response.json();
@@ -150,7 +151,7 @@ export default class AdminDocumentsController extends Controller {
     console.log(this.skipAi)
     if(this.skipAi){
       try{
-          let response = await fetch("http://localhost:8000/api/documents/skipAi", {
+          let response = await fetch(`${ENV.APP.apiUrl}/api/documents/skipAi`, {
               method: "POST",
               body: formData
             });
@@ -167,7 +168,7 @@ export default class AdminDocumentsController extends Controller {
     }
     try {
       console.log("📤 Envoi du document...");
-      let response = await fetch("http://localhost:8000/api/documents", {
+      let response = await fetch(`${ENV.APP.apiUrl}/api/documents`, {
         method: "POST",
         body: formData
       });
@@ -187,7 +188,7 @@ export default class AdminDocumentsController extends Controller {
   @action async downloadDocument(id, name) {
     try {
       console.log(`📥 Téléchargement du document ${id}...`);
-      let response = await fetch(`http://localhost:8000/api/documents/${id}/download`);
+      let response = await fetch(`${ENV.APP.apiUrl}/api/documents/${id}/download`);
       if (!response.ok) throw new Error("Erreur API téléchargement");
 
       let blob = await response.blob();
@@ -229,7 +230,7 @@ export default class AdminDocumentsController extends Controller {
     
     try {
       console.log(`🗑️ Suppression du document ${this.documentToDelete.id}...`);
-      let response = await fetch(`http://localhost:8000/api/documents/${this.documentToDelete.id}`, {
+      let response = await fetch(`${ENV.APP.apiUrl}/api/documents/${this.documentToDelete.id}`, {
         method: "DELETE"
       });
 
@@ -247,7 +248,7 @@ export default class AdminDocumentsController extends Controller {
   @action async toggleDocumentUsed(doc) {
     try {
       console.log(`🔄 Mise à jour du statut 'used' pour le document ${doc.id}...`);
-      let response = await fetch(`http://localhost:8000/api/documents/${doc.id}`, {
+      let response = await fetch(`${ENV.APP.apiUrl}/api/documents/${doc.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"

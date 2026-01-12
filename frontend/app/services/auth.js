@@ -2,6 +2,7 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { inject as service } from '@ember/service';
+import ENV from 'frontend/config/environment';
 
 export default class AuthService extends Service {
   @service router;
@@ -40,7 +41,7 @@ export default class AuthService extends Service {
    */
   async login(email, password) {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch(`${ENV.APP.apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

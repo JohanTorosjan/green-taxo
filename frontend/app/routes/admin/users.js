@@ -2,6 +2,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import AuthenticatedRoute from '../authenticated';
+import ENV from 'frontend/config/environment';
 
 export default class AdminUsersRoute extends AuthenticatedRoute {
   @service auth;
@@ -10,7 +11,7 @@ export default class AdminUsersRoute extends AuthenticatedRoute {
     try {
       const token = this.auth.token;
       
-      const response = await fetch('http://localhost:8000/api/users', {
+      const response = await fetch(`${ENV.APP.apiUrl}/api/users`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

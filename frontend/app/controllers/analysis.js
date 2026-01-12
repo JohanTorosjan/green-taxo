@@ -2,6 +2,7 @@ import Controller from '@ember/controller';
 import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
+import ENV from 'frontend/config/environment';
 
 export default class AnalysisDetailController extends Controller {
   @service router;
@@ -114,7 +115,7 @@ get displayedDate() {
   // Rafraîchir l'analyse
   async refreshAnalysis() {
     try {
-      const response = await fetch(`http://localhost:8000/analysis/${this.model.id}`);
+      const response = await fetch(`${ENV.APP.apiUrl}/analysis/${this.model.id}`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -212,7 +213,7 @@ async handleExportConfirm(exportOptions) {
   this.closeExportModal();
   
   try {
-    const response = await fetch('http://localhost:8000/api/admin/export', {
+    const response = await fetch(`${ENV.APP.apiUrl}/api/admin/export`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -239,7 +240,7 @@ async handleExportConfirm(exportOptions) {
     document.body.removeChild(a);
 
 if(exportOptions.separateFiles.results){
-  const response = await fetch('http://localhost:8000/api/admin/exportResultsFiles', {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportResultsFiles`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -267,7 +268,7 @@ if(exportOptions.separateFiles.results){
 }
 
 if(exportOptions.separateFiles.calculationModel){
-  const response = await fetch('http://localhost:8000/api/admin/exportCalculationModel', {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportCalculationModel`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -295,7 +296,7 @@ if(exportOptions.separateFiles.calculationModel){
 }
 
 if(exportOptions.separateFiles.justification){
-  const response = await fetch('http://localhost:8000/api/admin/exportJustifications', {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportJustifications`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

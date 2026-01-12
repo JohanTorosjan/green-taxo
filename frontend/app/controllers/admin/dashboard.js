@@ -3,6 +3,7 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
+import ENV from 'frontend/config/environment';
 
 export default class AdminDashboardController extends Controller {
   @service auth;
@@ -172,7 +173,7 @@ export default class AdminDashboardController extends Controller {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/admin/dashboard/analyses?target_date=${date}`,
+        `${ENV.APP.apiUrl}/api/admin/dashboard/analyses?target_date=${date}`,
         {
           headers: {
             'Content-Type': 'application/json'
@@ -196,6 +197,9 @@ export default class AdminDashboardController extends Controller {
 
   @action
   async loadAllAnalyses() {
+    console.log('ENV:', ENV);
+console.log('API URL:', ENV.APP?.apiUrl);
+
     this.isLoading = true;
     this.error = null;
     this.selectedAnalysesIds = [];
@@ -203,7 +207,7 @@ export default class AdminDashboardController extends Controller {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/admin/dashboard/fullanalyses`,
+        `${ENV.APP.apiUrl}/api/admin/dashboard/fullanalyses`,
         {
           headers: {
             'Content-Type': 'application/json'
@@ -299,7 +303,7 @@ async handleExportConfirm(exportOptions) {
   this.closeExportModal();
   
   try {
-    const response = await fetch('http://localhost:8000/api/admin/export', {
+    const response = await fetch(`${ENV.APP.apiUrl}/api/admin/export`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -326,7 +330,7 @@ async handleExportConfirm(exportOptions) {
     document.body.removeChild(a);
 
 if(exportOptions.separateFiles.results){
-  const response = await fetch('http://localhost:8000/api/admin/exportResultsFiles', {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportResultsFiles`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -354,7 +358,7 @@ if(exportOptions.separateFiles.results){
 }
 
 if(exportOptions.separateFiles.calculationModel){
-  const response = await fetch('http://localhost:8000/api/admin/exportCalculationModel', {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportCalculationModel`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -382,7 +386,7 @@ if(exportOptions.separateFiles.calculationModel){
 }
 
 if(exportOptions.separateFiles.justification){
-  const response = await fetch('http://localhost:8000/api/admin/exportJustifications', {
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportJustifications`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

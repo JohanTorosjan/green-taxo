@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
+import ENV from 'frontend/config/environment';
 
 export default class AnalysisRoute extends Route {
   @service router;
@@ -14,7 +15,7 @@ export default class AnalysisRoute extends Route {
 
   async model(params) {
     try {
-      const response = await fetch(`http://localhost:8000/analysis/${params.id}`);
+      const response = await fetch(`${ENV.APP.apiUrl}/analysis/${params.id}`);
 
       if (!response.ok) {
         if (response.status === 404) {

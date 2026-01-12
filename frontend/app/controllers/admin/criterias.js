@@ -1,6 +1,7 @@
 import Controller from '@ember/controller';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
+import ENV from 'frontend/config/environment';
 
 export default class CriteriasController extends Controller {
   @tracked showModal = false;
@@ -120,8 +121,8 @@ export default class CriteriasController extends Controller {
     try {
       let response;
       const url = this.isEditMode
-        ? `${this.API_URL}/criterias/${this.currentEditingId}`
-        : `${this.API_URL}/criterias/${documentId}`;
+        ? `${ENV.APP.apiUrl}/criterias/${this.currentEditingId}`
+        : `${ENV.APP.apiUrl}/criterias/${documentId}`;
 
       const method = this.isEditMode ? 'PUT' : 'POST';
 
@@ -178,7 +179,7 @@ export default class CriteriasController extends Controller {
     }
 
     try {
-      const url = `${this.API_URL}/criterias/${id}`;
+      const url = `${ENV.APP.apiUrl}/criterias/${id}`;
       console.log('[Criterias] Envoi DELETE vers:', url);
 
       const response = await fetch(url, {
@@ -218,7 +219,7 @@ export default class CriteriasController extends Controller {
     this.isLoading = true;
     try {
       const documentId = this.id || 1;
-      const url = `${this.API_URL}/criterias/${documentId}`;
+      const url = `${ENV.APP.apiUrl}/criterias/${documentId}`;
       console.log('[Criterias] Fetch GET vers:', url);
 
       const response = await fetch(url, {

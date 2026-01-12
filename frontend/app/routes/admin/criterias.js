@@ -1,4 +1,5 @@
 import Route from '@ember/routing/route';
+import ENV from 'frontend/config/environment';
 
 export default class CriteriasRoute extends Route {
 
@@ -12,7 +13,7 @@ export default class CriteriasRoute extends Route {
     try {
 
       const response = await fetch(
-        `http://localhost:8000/criterias/${params.id}`,
+        `${ENV.APP.apiUrl}/criterias/${params.id}`,
         {
           method: 'GET',
           headers: {
