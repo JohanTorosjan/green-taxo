@@ -30,6 +30,8 @@
           <label class="checkbox-label">
             <input 
               type="checkbox" 
+                disabled="true"
+
               checked={{this.includeId}}
               {{on "change" (fn this.toggleColumn "includeId")}}
             />
@@ -40,6 +42,7 @@
             <input 
               type="checkbox" 
               checked={{this.includeName}}
+              disabled="true"
               {{on "change" (fn this.toggleColumn "includeName")}}
             />
             <span>Name</span>

@@ -775,3 +775,254 @@ async def export_analysis(request: ExportRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+    
+import csv
+import io
+import zipfile
+from datetime import datetime
+from fastapi.responses import Response
+
+@app.post("/api/admin/exportResultsFiles")
+async def export_results(request: ExportRequest):
+    """
+    Exporte les résultats dans des fichiers CSV (un par analyse) regroupés dans un ZIP
+    """
+    try:
+        print("=" * 80)
+        print("DÉBUT DE L'EXPORT")
+        print("=" * 80)
+        
+        analysis_ids = request.analysis_ids
+        columns_config = request.export_options.get('columns', {})
+        
+        print(f"\n📋 IDs d'analyses à exporter: {analysis_ids}")
+        print(f"📊 Configuration des colonnes: {columns_config}")
+        
+        # Vérifier qu'il y a des analyses à exporter
+        if not analysis_ids:
+            raise HTTPException(status_code=400, detail="Aucune analyse sélectionnée")
+        
+        # Construire la liste des colonnes à inclure
+        sql_columns = []
+        csv_metadata_headers = []
+        
+        if columns_config.get('id'):
+            sql_columns.append('a.id')
+            csv_metadata_headers.append('ID')
+        
+        if columns_config.get('name'):
+            sql_columns.append('a.name')
+            csv_metadata_headers.append('Name')
+        
+        if columns_config.get('created_at'):
+            sql_columns.append('a.created_at')
+            csv_metadata_headers.append('Creation Date')
+        
+        if columns_config.get('doc_date'):
+            sql_columns.append('a.doc_date')
+            csv_metadata_headers.append('Document Date')
+        
+        if columns_config.get('user_email'):
+            sql_columns.append('u.email')
+            csv_metadata_headers.append('User Email')
+        
+        if columns_config.get('company'):
+            sql_columns.append('a.company')
+            csv_metadata_headers.append('Company')
+        
+        if columns_config.get('score'):
+            sql_columns.append('a.score')
+            csv_metadata_headers.append('Score')
+        
+        # Toujours inclure analysis_results
+        sql_columns.append('a.analysis_results')
+        
+        if columns_config.get('calculation_model'):
+            sql_columns.append('a.calculation_model')
+            csv_metadata_headers.append('Calculation Model')
+        
+        print(f"\n✅ Colonnes SQL à récupérer: {sql_columns}")
+        print(f"✅ En-têtes CSV métadonnées: {csv_metadata_headers}")
+        
+        # Vérifier qu'au moins une colonne est sélectionnée
+        if not csv_metadata_headers:
+            raise HTTPException(status_code=400, detail="Aucune colonne sélectionnée")
+        
+        # Construire et exécuter la requête SQL
+        columns_str = ', '.join(sql_columns)
+        placeholders = ', '.join(['%s'] * len(analysis_ids))
+        
+        query = f"""
+            SELECT {columns_str}
+            FROM analysis a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.id IN ({placeholders})
+            ORDER BY a.id
+        """
+        
+        print(f"\n🔍 Exécution de la requête SQL...")
+        print(f"Query: {query}")
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(query, analysis_ids)
+        results = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        print(f"\n✅ {len(results)} analyse(s) récupérée(s)")
+        
+        # Créer un buffer pour le fichier ZIP
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            print(f"\n📦 Création du ZIP...")
+            
+            # Pour chaque analyse, créer un CSV
+            for idx, row in enumerate(results, 1):
+                print(f"\n{'=' * 80}")
+                print(f"TRAITEMENT ANALYSE {idx}/{len(results)}")
+                print(f"{'=' * 80}")
+                
+                # Créer un buffer pour le CSV
+                csv_buffer = io.StringIO()
+                csv_writer = csv.writer(csv_buffer)
+                
+                # Extraire les métadonnées de l'analyse
+                print(f"\n📝 Extraction des métadonnées...")
+                metadata_values = []
+                
+                if columns_config.get('id'):
+                    val = row.get('id', '')
+                    metadata_values.append(val)
+                    print(f"  - ID: {val}")
+                
+                if columns_config.get('name'):
+                    val = row.get('name', '')
+                    metadata_values.append(val)
+                    print(f"  - Name: {val}")
+                
+                if columns_config.get('created_at'):
+                    val = row.get('created_at', '')
+                    if isinstance(val, datetime):
+                        val = val.strftime('%Y-%m-%d %H:%M:%S')
+                    metadata_values.append(val)
+                    print(f"  - Created At: {val}")
+                
+                if columns_config.get('doc_date'):
+                    val = row.get('doc_date', '')
+                    if hasattr(val, 'strftime'):
+                        val = val.strftime('%Y-%m-%d')
+                    metadata_values.append(val)
+                    print(f"  - Doc Date: {val}")
+                
+                if columns_config.get('user_email'):
+                    val = row.get('email', '')
+                    metadata_values.append(val)
+                    print(f"  - User Email: {val}")
+                
+                if columns_config.get('company'):
+                    val = row.get('company', '')
+                    metadata_values.append(val)
+                    print(f"  - Company: {val}")
+                
+                if columns_config.get('score'):
+                    val = row.get('score', '')
+                    metadata_values.append(val)
+                    print(f"  - Score: {val}")
+                
+                if columns_config.get('calculation_model'):
+                    val = row.get('calculation_model', '')
+                    if isinstance(val, (dict, list)):
+                        import json
+                        val = json.dumps(val)
+                    metadata_values.append(val)
+                    print(f"  - Calculation Model: {str(val)[:100]}...")
+                
+                # Écrire la ligne de métadonnées
+                print(f"\n✍️ Écriture de la ligne de métadonnées...")
+                csv_writer.writerow(csv_metadata_headers)
+                csv_writer.writerow(metadata_values)
+                
+                # Ajouter une ligne vide pour séparer
+                csv_writer.writerow([])
+                
+                # Écrire les en-têtes pour analysis_results
+                analysis_headers = ['Requirement Name', 'Present', 'Justification']
+                csv_writer.writerow(analysis_headers)
+                print(f"\n✍️ Écriture des analysis_results...")
+                print(f"  En-têtes: {analysis_headers}")
+                
+                # Extraire et écrire les analysis_results
+                analysis_results = row.get('analysis_results', [])
+                print(f"\n  📊 Nombre de résultats d'analyse: {len(analysis_results)}")
+                
+                if analysis_results:
+                    for result_idx, result in enumerate(analysis_results, 1):
+                        name = result.get('name', '')
+                        present = result.get('present', False)
+                        justification = result.get('justification', '')
+                        
+                        # Convertir le booléen en texte plus lisible
+                        present_text = 'Yes' if present else 'No'
+                        
+                        # Nettoyer la justification (supprimer les sauts de ligne multiples)
+                        if justification:
+                            justification = ' '.join(justification.split())
+                        
+                        csv_writer.writerow([name, present_text, justification or ''])
+                        
+                        print(f"  {result_idx}. {name[:50]}... - Present: {present_text}")
+                else:
+                    print(f"  ⚠️ Aucun résultat d'analyse trouvé")
+                    csv_writer.writerow(['No analysis results available', '', ''])
+                
+                # Récupérer le contenu du CSV
+                csv_content = csv_buffer.getvalue()
+                csv_buffer.close()
+                
+                # Générer un nom de fichier pour ce CSV
+                analysis_id = row.get('id', idx)
+                analysis_name = row.get('name', f'analysis_{analysis_id}')
+                # Nettoyer le nom pour éviter les caractères problématiques
+                safe_name = "".join(c for c in analysis_name if c.isalnum() or c in (' ', '-', '_')).strip()
+                csv_filename = f"{safe_name}_{analysis_id}.csv"
+                
+                print(f"\n💾 Ajout du fichier au ZIP: {csv_filename}")
+                print(f"  Taille du CSV: {len(csv_content)} caractères")
+                
+                # Ajouter le CSV au ZIP
+                zip_file.writestr(csv_filename, csv_content)
+                print(f"  ✅ Fichier ajouté avec succès")
+        
+        print(f"\n{'=' * 80}")
+        print(f"ZIP CRÉÉ AVEC SUCCÈS")
+        print(f"{'=' * 80}")
+        
+        # Préparer la réponse
+        zip_buffer.seek(0)
+        zip_content = zip_buffer.getvalue()
+        
+        print(f"\n📦 Taille totale du ZIP: {len(zip_content)} octets")
+        print(f"✅ Export terminé avec succès!")
+        print("=" * 80)
+        
+        # Retourner le fichier ZIP
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        zip_filename = f"analyses_export_{timestamp}.zip"
+        
+        return Response(
+            content=zip_content,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f"attachment; filename={zip_filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"\n❌ ERREUR: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
