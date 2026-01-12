@@ -353,6 +353,63 @@ if(exportOptions.separateFiles.results){
   document.body.removeChild(a);
 }
 
+if(exportOptions.separateFiles.calculationModel){
+  const response = await fetch('http://localhost:8000/api/admin/exportCalculationModel', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      analysis_ids: this.selectedAnalysesIds,
+      export_options: exportOptions
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de l\'export des résultats');
+  }
+
+  // Télécharger le ZIP
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `calculation_model_${Date.now()}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+if(exportOptions.separateFiles.justification){
+  const response = await fetch('http://localhost:8000/api/admin/exportJustifications', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      analysis_ids: this.selectedAnalysesIds,
+      export_options: exportOptions
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de l\'export des résultats');
+  }
+
+  // Télécharger le ZIP
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `justifications_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+
   } catch (error) {
     console.error('Erreur:', error);
     alert('Erreur lors de l\'export');

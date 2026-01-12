@@ -1026,3 +1026,417 @@ async def export_results(request: ExportRequest):
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+    
+
+import csv
+import io
+import zipfile
+import json
+from datetime import datetime
+
+@app.post("/api/admin/exportCalculationModel")
+async def export_calculation_model(request: ExportRequest):
+    """
+    Exporte le modèle de calcul dans des fichiers CSV (un par analyse) regroupés dans un ZIP
+    """
+    try:
+        print("=" * 80)
+        print("DÉBUT DE L'EXPORT CALCULATION MODEL")
+        print("=" * 80)
+        
+        analysis_ids = request.analysis_ids
+        columns_config = request.export_options.get('columns', {})
+        
+        print(f"\n📋 IDs d'analyses à exporter: {analysis_ids}")
+        print(f"📊 Configuration des colonnes: {columns_config}")
+        
+        # Vérifier qu'il y a des analyses à exporter
+        if not analysis_ids:
+            raise HTTPException(status_code=400, detail="Aucune analyse sélectionnée")
+        
+        # Construire la liste des colonnes à inclure
+        sql_columns = []
+        csv_metadata_headers = []
+        
+        if columns_config.get('id'):
+            sql_columns.append('a.id')
+            csv_metadata_headers.append('ID')
+        
+        if columns_config.get('name'):
+            sql_columns.append('a.name')
+            csv_metadata_headers.append('Name')
+        
+        if columns_config.get('created_at'):
+            sql_columns.append('a.created_at')
+            csv_metadata_headers.append('Creation Date')
+        
+        if columns_config.get('doc_date'):
+            sql_columns.append('a.doc_date')
+            csv_metadata_headers.append('Document Date')
+        
+        if columns_config.get('user_email'):
+            sql_columns.append('u.email')
+            csv_metadata_headers.append('User Email')
+        
+        if columns_config.get('company'):
+            sql_columns.append('a.company')
+            csv_metadata_headers.append('Company')
+        
+        if columns_config.get('score'):
+            sql_columns.append('a.score')
+            csv_metadata_headers.append('Score')
+        
+        # Toujours inclure calculation_model
+        sql_columns.append('a.calculation_model')
+        
+        if columns_config.get('analysis_results'):
+            sql_columns.append('a.analysis_results')
+            csv_metadata_headers.append('Analysis Results')
+        
+        print(f"\n✅ Colonnes SQL à récupérer: {sql_columns}")
+        print(f"✅ En-têtes CSV métadonnées: {csv_metadata_headers}")
+        
+        # Vérifier qu'au moins une colonne est sélectionnée
+        if not csv_metadata_headers:
+            raise HTTPException(status_code=400, detail="Aucune colonne sélectionnée")
+        
+        # Construire et exécuter la requête SQL
+        columns_str = ', '.join(sql_columns)
+        placeholders = ', '.join(['%s'] * len(analysis_ids))
+        
+        query = f"""
+            SELECT {columns_str}
+            FROM analysis a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.id IN ({placeholders})
+            ORDER BY a.id
+        """
+        
+        print(f"\n🔍 Exécution de la requête SQL...")
+        print(f"Query: {query}")
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(query, analysis_ids)
+        results = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        print(f"\n✅ {len(results)} analyse(s) récupérée(s)")
+        
+        # Créer un buffer pour le fichier ZIP
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            print(f"\n📦 Création du ZIP...")
+            
+            # Pour chaque analyse, créer un CSV
+            for idx, row in enumerate(results, 1):
+                print(f"\n{'=' * 80}")
+                print(f"TRAITEMENT ANALYSE {idx}/{len(results)}")
+                print(f"{'=' * 80}")
+                
+                # Créer un buffer pour le CSV
+                csv_buffer = io.StringIO()
+                csv_writer = csv.writer(csv_buffer)
+                
+                # Extraire les métadonnées de l'analyse
+                print(f"\n📝 Extraction des métadonnées...")
+                metadata_values = []
+                
+                if columns_config.get('id'):
+                    val = row.get('id', '')
+                    metadata_values.append(val)
+                    print(f"  - ID: {val}")
+                
+                if columns_config.get('name'):
+                    val = row.get('name', '')
+                    metadata_values.append(val)
+                    print(f"  - Name: {val}")
+                
+                if columns_config.get('created_at'):
+                    val = row.get('created_at', '')
+                    if isinstance(val, datetime):
+                        val = val.strftime('%Y-%m-%d %H:%M:%S')
+                    metadata_values.append(val)
+                    print(f"  - Created At: {val}")
+                
+                if columns_config.get('doc_date'):
+                    val = row.get('doc_date', '')
+                    if hasattr(val, 'strftime'):
+                        val = val.strftime('%Y-%m-%d')
+                    metadata_values.append(val)
+                    print(f"  - Doc Date: {val}")
+                
+                if columns_config.get('user_email'):
+                    val = row.get('email', '')
+                    metadata_values.append(val)
+                    print(f"  - User Email: {val}")
+                
+                if columns_config.get('company'):
+                    val = row.get('company', '')
+                    metadata_values.append(val)
+                    print(f"  - Company: {val}")
+                
+                if columns_config.get('score'):
+                    val = row.get('score', '')
+                    metadata_values.append(val)
+                    print(f"  - Score: {val}")
+                
+                if columns_config.get('analysis_results'):
+                    val = row.get('analysis_results', '')
+                    if isinstance(val, (dict, list)):
+                        val = json.dumps(val)
+                    metadata_values.append(val)
+                    print(f"  - Analysis Results: {str(val)[:100]}...")
+                
+                # Écrire la ligne de métadonnées
+                print(f"\n✍️ Écriture de la ligne de métadonnées...")
+                csv_writer.writerow(csv_metadata_headers)
+                csv_writer.writerow(metadata_values)
+                
+                # Ajouter une ligne vide pour séparer
+                csv_writer.writerow([])
+                
+                # Écrire les en-têtes pour calculation_model
+                calculation_model_headers = ['ID', 'Name', 'Coefficient', 'Description', 'Document ID', 'Data']
+                csv_writer.writerow(calculation_model_headers)
+                print(f"\n✍️ Écriture du calculation_model...")
+                print(f"  En-têtes: {calculation_model_headers}")
+                
+                # Extraire et écrire le calculation_model
+                calculation_model = row.get('calculation_model', [])
+                print(f"\n  📊 Nombre d'entrées du modèle de calcul: {len(calculation_model) if calculation_model else 0}")
+                
+                if calculation_model:
+                    for model_idx, model_entry in enumerate(calculation_model, 1):
+                        entry_id = model_entry.get('id', '')
+                        nom = model_entry.get('nom', '')
+                        coefficient = model_entry.get('coefficient', '')
+                        description = model_entry.get('description', '')
+                        document_id = model_entry.get('document_id', '')
+                        data = model_entry.get('data', {})
+                        
+                        # Convertir data en JSON string si c'est un dict/list
+                        if isinstance(data, (dict, list)):
+                            data_str = json.dumps(data) if data else '{}'
+                        else:
+                            data_str = str(data) if data else '{}'
+                        
+                        # Nettoyer la description (supprimer les sauts de ligne multiples)
+                        if description:
+                            description = ' '.join(description.split())
+                        
+                        csv_writer.writerow([
+                            entry_id,
+                            nom,
+                            coefficient,
+                            description or '',
+                            document_id,
+                            data_str
+                        ])
+                        
+                        print(f"  {model_idx}. ID={entry_id} | {nom[:50]}... | Coef={coefficient}")
+                else:
+                    print(f"  ⚠️ Aucun modèle de calcul trouvé")
+                    csv_writer.writerow(['No calculation model available', '', '', '', '', ''])
+                
+                # Récupérer le contenu du CSV
+                csv_content = csv_buffer.getvalue()
+                csv_buffer.close()
+                
+                # Générer un nom de fichier pour ce CSV
+                analysis_id = row.get('id', idx)
+                analysis_name = row.get('name', f'analysis_{analysis_id}')
+                # Nettoyer le nom pour éviter les caractères problématiques
+                safe_name = "".join(c for c in analysis_name if c.isalnum() or c in (' ', '-', '_')).strip()
+                csv_filename = f"calculation_model_{safe_name}_{analysis_id}.csv"
+                
+                print(f"\n💾 Ajout du fichier au ZIP: {csv_filename}")
+                print(f"  Taille du CSV: {len(csv_content)} caractères")
+                
+                # Ajouter le CSV au ZIP
+                zip_file.writestr(csv_filename, csv_content)
+                print(f"  ✅ Fichier ajouté avec succès")
+        
+        print(f"\n{'=' * 80}")
+        print(f"ZIP CRÉÉ AVEC SUCCÈS")
+        print(f"{'=' * 80}")
+        
+        # Préparer la réponse
+        zip_buffer.seek(0)
+        zip_content = zip_buffer.getvalue()
+        
+        print(f"\n📦 Taille totale du ZIP: {len(zip_content)} octets")
+        print(f"✅ Export terminé avec succès!")
+        print("=" * 80)
+        
+        # Retourner le fichier ZIP
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        zip_filename = f"calculation_model_export_{timestamp}.zip"
+        
+        return Response(
+            content=zip_content,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f"attachment; filename={zip_filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"\n❌ ERREUR: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+        
+      
+import csv
+import io
+from datetime import datetime
+
+@app.post("/api/admin/exportJustifications")
+async def export_justifications(request: ExportRequest):
+    """
+    Exporte les justifications (critères avec present=True) de toutes les analyses sélectionnées
+    dans un seul fichier CSV
+    """
+    try:
+        print("=" * 80)
+        print("DÉBUT DE L'EXPORT DES JUSTIFICATIONS")
+        print("=" * 80)
+        
+        analysis_ids = request.analysis_ids
+        
+        print(f"\n📋 IDs d'analyses à exporter: {analysis_ids}")
+        
+        # Vérifier qu'il y a des analyses à exporter
+        if not analysis_ids:
+            raise HTTPException(status_code=400, detail="Aucune analyse sélectionnée")
+        
+        # Construire et exécuter la requête SQL
+        placeholders = ', '.join(['%s'] * len(analysis_ids))
+        
+        query = f"""
+            SELECT a.id, a.name, a.analysis_results
+            FROM analysis a
+            WHERE a.id IN ({placeholders})
+            ORDER BY a.id
+        """
+        
+        print(f"\n🔍 Exécution de la requête SQL...")
+        print(f"Query: {query}")
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(query, analysis_ids)
+        results = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        print(f"\n✅ {len(results)} analyse(s) récupérée(s)")
+        
+        # Créer un buffer pour le CSV
+        csv_buffer = io.StringIO()
+        csv_writer = csv.writer(csv_buffer)
+        
+        # Écrire les en-têtes
+        headers = ['Criterion Name', 'Document Name', 'Justification']
+        csv_writer.writerow(headers)
+        print(f"\n✍️ En-têtes CSV: {headers}")
+        
+        # Compteur de justifications exportées
+        total_justifications = 0
+        
+        # Pour chaque analyse
+        for idx, row in enumerate(results, 1):
+            print(f"\n{'=' * 80}")
+            print(f"TRAITEMENT ANALYSE {idx}/{len(results)}")
+            print(f"{'=' * 80}")
+            
+            analysis_id = row.get('id', '')
+            document_name = row.get('name', '')
+            analysis_results = row.get('analysis_results', [])
+            
+            print(f"\n📄 Document: {document_name}")
+            print(f"🆔 ID: {analysis_id}")
+            print(f"📊 Nombre total de critères: {len(analysis_results) if analysis_results else 0}")
+            
+            if not analysis_results:
+                print(f"  ⚠️ Aucun résultat d'analyse trouvé pour cette analyse")
+                continue
+            
+            # Filtrer uniquement les critères avec present=True
+            present_criteria = [
+                result for result in analysis_results 
+                if result.get('present') == True
+            ]
+            
+            print(f"✅ Critères avec present=True: {len(present_criteria)}")
+            
+            if not present_criteria:
+                print(f"  ℹ️ Aucun critère présent pour ce document")
+                continue
+            
+            # Écrire chaque critère présent
+            for criterion_idx, criterion in enumerate(present_criteria, 1):
+                criterion_name = criterion.get('name', '')
+                justification = criterion.get('justification', '')
+                
+                # Nettoyer la justification (supprimer les sauts de ligne multiples)
+                if justification:
+                    justification = ' '.join(justification.split())
+                
+                csv_writer.writerow([
+                    criterion_name,
+                    document_name,
+                    justification or ''
+                ])
+                
+                total_justifications += 1
+                
+                print(f"  {criterion_idx}. {criterion_name[:60]}...")
+                if justification:
+                    print(f"     Justification: {justification[:100]}...")
+                else:
+                    print(f"     ⚠️ Pas de justification fournie")
+        
+        print(f"\n{'=' * 80}")
+        print(f"EXPORT TERMINÉ")
+        print(f"{'=' * 80}")
+        print(f"\n📊 Statistiques:")
+        print(f"  - Analyses traitées: {len(results)}")
+        print(f"  - Justifications exportées: {total_justifications}")
+        
+        # Récupérer le contenu du CSV
+        csv_content = csv_buffer.getvalue()
+        csv_buffer.close()
+        
+        print(f"  - Taille du CSV: {len(csv_content)} caractères")
+        
+        if total_justifications == 0:
+            print(f"\n⚠️ ATTENTION: Aucune justification trouvée (aucun critère avec present=True)")
+        
+        print(f"\n✅ Export terminé avec succès!")
+        print("=" * 80)
+        
+        # Retourner le fichier CSV
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        csv_filename = f"justifications_export_{timestamp}.csv"
+        
+        return Response(
+            content=csv_content.encode('utf-8'),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={csv_filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"\n❌ ERREUR: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")

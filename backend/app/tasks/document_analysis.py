@@ -44,6 +44,11 @@ def save_analysis_results(
         print('results_json result')
         print(results_json)
 
+        analysis_final_status="completed"   
+        #BELEK ICI
+        if(results_json == []):
+            analysis_final_status='error'
+
         # Mettre à jour la table analysis
         cur.execute("""
             UPDATE analysis 
@@ -58,7 +63,7 @@ def save_analysis_results(
             model_json,
             results_json,
             score,
-            'completed',
+            analysis_final_status,
             doc_id
         ))
         
