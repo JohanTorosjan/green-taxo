@@ -64,7 +64,7 @@ get displayedDate() {
   }
 
   get satisfiedCriteriaCount() {
-    const results = this.model?.analysis_results || [];
+    const results = this.criteriaList || [];
     return results.filter(r => r.present === true).length;
   }
 
