@@ -13,7 +13,7 @@ class LLMMistralAgent:
     Classe pour interagir directement avec le LLM Mistral via langchain_mistralai
     """
 
-    def __init__(self, model: str = "mistral-medium-latest"):
+    def __init__(self, model: str = "mistral-large-latest"):
         """
         Initialise le modèle Mistral
 

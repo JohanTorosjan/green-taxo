@@ -286,7 +286,7 @@ async def run_mistral_analysis(text_content: str, metadata: dict) -> str:
     """
     Fonction asynchrone appelée par Celery via asyncio.run()
     """
-    agent = LLMMistralAgent(model="mistral-medium-latest")
+    agent = LLMMistralAgent(model="mistral-large-latest")
 
 
     response = await agent.extractCriteriaFromRegulation(text_content, temperature=0.2)
@@ -337,7 +337,7 @@ async def run_mistral_repport_analysis(text_content: str, metadata: dict,calcula
     """
     Fonction asynchrone appelée par Celery via asyncio.run()
     """
-    agent = LLMMistralAgent(model="mistral-medium-latest")
+    agent = LLMMistralAgent(model="mistral-large-latest")
 
 
     response = await agent.analyseRepport(text_content,calculation_model,temperature=0.2,)
