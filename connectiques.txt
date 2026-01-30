@@ -15,7 +15,9 @@ AwlXzD0mWD9imPr4CobQyReVecFai3W6
 
 Deploy : 
 
-
+username: johan-moma
+password: johanpassword
+Dopaine: default
 https://crocc-mtp.meso.umontpellier.fr/auth/login/
 ssh -i ~/.ssh/id_ed25519 ubuntu@195.220.87.129
 

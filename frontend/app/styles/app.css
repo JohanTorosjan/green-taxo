@@ -8,7 +8,7 @@
 @import url('modal.css');
 @import url('dashboard.css');
 @import url('export-modal.css');
-
+@import url('home.css');
 /* Variables et base */
 :root {
   --color-primary: #2563eb;
@@ -35,7 +35,7 @@
   --shadow-md: 0 4px 6px rgb(0 0 0 / 7%);
   --shadow-lg: 0 10px 15px rgb(0 0 0 / 10%);
   --header-height: 64px;
-  --footer-height: 60px;
+  --footer-height: 10dvh;
 }
 
 /* Reset et base */
@@ -174,6 +174,11 @@ body {
   justify-content: space-between;
 }
 
+.chair-logo{
+  display: flex;
+  height: 9dvh;
+}
+
 .footer-left p {
   color: var(--color-text-light);
   font-size: 0.875rem;
@@ -187,7 +192,7 @@ body {
 .footer-link {
   color: var(--color-text-light);
   text-decoration: none;
-  font-size: 0.875rem;
+    font-size: 0.6rem;
   transition: color 0.2s ease;
 }
 

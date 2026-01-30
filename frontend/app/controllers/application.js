@@ -5,10 +5,15 @@ import { inject as service } from '@ember/service';
 
 export default class ApplicationController extends Controller {
     @service auth;
-    
+    @service router;
     @action
     logout(){
         this.auth.logout()
+    }
+
+    @action
+    goToHome(){
+        this.router.transitionTo("home")
     }
     
 }

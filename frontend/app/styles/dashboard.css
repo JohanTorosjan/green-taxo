@@ -32,6 +32,7 @@ thead th {
 
 .dashboard-header h1 {
   margin: 0;
+
   /* font-size: 1.875rem;
   font-weight: 600; */
 }
@@ -161,7 +162,7 @@ thead th {
 .filter-item select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.1);
+  box-shadow: 0 0 0 3px rgb(255 204 0 / 10%);
 }
 
 .filter-item input[type="text"]::placeholder,
@@ -398,7 +399,7 @@ box-shadow: var(--shadow-md);
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;

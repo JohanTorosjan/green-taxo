@@ -18,4 +18,5 @@ Router.map(function () {
   this.route('analysis');
   this.route('login');
   this.route('authenticated');
+  this.route('home');
 });

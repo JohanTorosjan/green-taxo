@@ -1,0 +1,187 @@
+<div class="home-page">
+  <div class="home-container">
+    {{!-- Header avec switch de langue --}}
+    <div class="home-header">
+      <div class="language-switch">
+        <button
+          class="lang-btn {{if this.isFrench 'active' ''}}"
+          {{on "click" (fn this.setLanguage "fr")}}
+        >
+          FR
+        </button>
+        <button
+          class="lang-btn {{unless this.isFrench 'active' ''}}"
+          {{on "click" (fn this.setLanguage "en")}}
+        >
+          EN
+        </button>
+      </div>
+    </div>
+
+    {{!-- Section Hero --}}
+    <section class="hero-section">
+      <div class="hero-icon">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      
+      <h1 class="hero-title">{{if this.isFrench "GreenTaxo" "GreenTaxo"}}</h1>
+      
+      <p class="hero-subtitle">
+        {{if this.isFrench 
+          "Analyse de conformité des informations de durabilité" 
+          "Sustainability Information Compliance Analysis"
+        }}
+      </p>
+    </section>
+
+    {{!-- Section À propos --}}
+    <section class="about-section">
+      <div class="about-card">
+        <h2 class="section-title">
+          {{if this.isFrench "À propos" "About"}}
+        </h2>
+        
+        <div class="about-content">
+          {{#if this.isFrench}}
+            <p class="about-text">
+              GreenTaxo est un outil d'analyse de conformité des informations de durabilité, 
+              communiquées ou soumises par une organisation, en référence à la réglementation en vigueur.
+            </p>
+            <p class="about-text">
+              Le résultat de cette analyse est produit sous la forme d'un <strong>score de conformité global</strong>. 
+              La version actuellement offerte sur cette plateforme est centrée sur la réglementation dite 
+              <strong>« Taxonomie européenne »</strong> afin d'analyser les informations narratives explicatives 
+              données en complément des indicateurs clés de performance requis par la réglementation.
+            </p>
+            <p class="about-text">
+              L'analyse est basée sur l'usage d'une <strong>IA de type LLM</strong>.
+            </p>
+          {{else}}
+            <p class="about-text">
+              GreenTaxo is a compliance analysis tool for sustainability information communicated or 
+              submitted by an organization, in reference to current regulations.
+            </p>
+            <p class="about-text">
+              The analysis result is produced as a <strong>global compliance score</strong>. The version 
+              currently offered on this platform focuses on the <strong>European Taxonomy</strong> regulation 
+              to analyze narrative explanatory information provided in addition to the key performance indicators 
+              required by the regulation.
+            </p>
+            <p class="about-text">
+              The analysis is based on the use of <strong>LLM-type AI</strong>.
+            </p>
+          {{/if}}
+        </div>
+      </div>
+    </section>
+
+    {{!-- Section Fonctionnalités --}}
+    <section class="features-section">
+      <h2 class="section-title">
+        {{if this.isFrench "Fonctionnalités clés" "Key Features"}}
+      </h2>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <h3 class="feature-title">
+            {{if this.isFrench "Analyse automatisée" "Automated Analysis"}}
+          </h3>
+          <p class="feature-description">
+            {{if this.isFrench 
+              "Analyse basée sur l'IA pour évaluer la conformité de vos documents" 
+              "AI-based analysis to assess your documents' compliance"
+            }}
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">
+            {{if this.isFrench "Score de conformité" "Compliance Score"}}
+          </h3>
+          <p class="feature-description">
+            {{if this.isFrench 
+              "Obtenez un score global pour mesurer votre niveau de conformité" 
+              "Get a global score to measure your compliance level"
+            }}
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18"></path>
+              <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">
+            {{if this.isFrench "Taxonomie européenne" "European Taxonomy"}}
+          </h3>
+          <p class="feature-description">
+            {{if this.isFrench 
+              "Conforme aux exigences de la réglementation européenne" 
+              "Compliant with European regulation requirements"
+            }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {{!-- Section Développé par --}}
+    <section class="credits-section">
+      <div class="credits-card">
+        <h2 class="section-title">
+          {{if this.isFrench "Développé par" "Developed by"}}
+        </h2>
+        
+        <p class="credits-text">
+          {{if this.isFrench 
+            "L'outil est développé par la Chaire SCORE, au sein de l'Université de Montpellier et avec le soutien du Booster Innovation de Montpellier (BIM)." 
+            "The tool is developed by Chaire SCORE, at the University of Montpellier and with the support of the Montpellier Innovation Booster (BIM)."
+          }}
+                  <img src="/assets/logochair2.svg" alt="Mon icône">
+
+        </p>
+      </div>
+    </section>
+
+    {{!-- Section Contact --}}
+    <section class="contact-section">
+      <h2 class="section-title">
+        {{if this.isFrench "Une question ?" "Any questions?"}}
+      </h2>
+      
+      <p class="contact-text">
+        {{if this.isFrench 
+          "Pour toute question relative à cette plateforme ou à l'outil, n'hésitez pas à nous contacter." 
+          "For any questions about this platform or the tool, feel free to contact us."
+        }}
+      </p>
+      
+      <button class="btn btn-primary btn-contact" {{on "click" this.sendEmail}}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <span>{{if this.isFrench "Nous contacter" "Contact us"}}</span>
+      </button>
+    </section>
+  </div>
+</div>

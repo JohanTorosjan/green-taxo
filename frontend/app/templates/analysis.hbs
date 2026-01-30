@@ -219,7 +219,7 @@
     {{! Export modal }}
   {{#if this.showExportModal}}
     <ExportModal 
-      @selectedCount=1
+      @selectedCount="1"
       @onClose={{this.closeExportModal}}
       @onConfirm={{this.handleExportConfirm}}
     />
