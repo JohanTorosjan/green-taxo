@@ -34,14 +34,13 @@
   <footer class="app-footer">
     <div class="footer-content">
       <div class="footer-left">
-        <p>By Chaire SCORE.</p>
-        
-      </div>
       <div class="chair-logo">
         <img src="/assets/logochair.svg" alt="Mon icône">
       </div>
+        
+      </div>
 
-      <div class="footer-right">
+      <div class="footer-right" {{on "click" this.sendMeAMail}}>
 
         <a href="#" class="footer-link">software developped by jo-dev</a>
         {{!-- <a href="#" class="footer-link">Confidentialité</a>

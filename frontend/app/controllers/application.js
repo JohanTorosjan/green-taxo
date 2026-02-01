@@ -15,5 +15,14 @@ export default class ApplicationController extends Controller {
     goToHome(){
         this.router.transitionTo("home")
     }
+
+    @action
+    sendMeAMail(){
+            const email = 'devgreentaxo@gmail.com'; // À MODIFIER avec l'adresse réelle
+        const subject = 'Question about GreenTaxo';
+    
+        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+        window.location.href = mailtoLink;
+    }
     
 }
