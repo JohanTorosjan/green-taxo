@@ -144,6 +144,25 @@
             <span>Calculation Model (one file per analysis)</span>
           </label>
 
+          {{!-- <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              checked={{this.exportJustificationFile}}
+              {{on "change" (fn this.toggleColumn "exportJustificationFile")}}
+            />
+            <span>Selection Justification (separate file)</span>
+          </label> --}}
+        </div>
+
+        {{#if this.hasAnySeparateFileSelected}}
+          <div class="warning-note">
+            <strong>Note:</strong> The export will generate multiple files in a ZIP archive
+          </div>
+        {{/if}}
+      </div>
+      <div class="export-section export-section-separated">
+        <h3>Custom formats</h3>
+        <div class="checkbox-group">
           <label class="checkbox-label">
             <input 
               type="checkbox" 
@@ -152,13 +171,16 @@
             />
             <span>Selection Justification (separate file)</span>
           </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              checked={{this.exportGeneralMatrix}}
+              {{on "change" (fn this.toggleColumn "exportGeneralMatrix")}}
+            />
+            <span>General (matrix)</span>
+          </label>          
         </div>
 
-        {{#if this.hasAnySeparateFileSelected}}
-          <div class="warning-note">
-            <strong>Note:</strong> The export will generate multiple files in a ZIP archive
-          </div>
-        {{/if}}
       </div>
     </div>
 

@@ -1523,3 +1523,194 @@ async def export_justifications(request: ExportRequest):
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'export: {str(e)}")
+
+
+import csv
+import io
+from datetime import datetime
+from fastapi.responses import StreamingResponse
+
+@app.post("/api/admin/exportCriteriaMatrix")
+async def export_criteria_matrix(request: ExportRequest):
+    """
+    Exporte une matrice de critères : analyses en lignes, critères en colonnes
+    Valeurs : 1 (validé), 0 (non validé), vide (critère absent du modèle)
+    """
+    try:
+        print("=" * 80)
+        print("DÉBUT DE L'EXPORT MATRICE DE CRITÈRES")
+        print("=" * 80)
+        
+        analysis_ids = request.analysis_ids
+        
+        print(f"\n📋 IDs d'analyses à exporter: {analysis_ids}")
+        
+        # Vérifier qu'il y a des analyses à exporter
+        if not analysis_ids:
+            raise HTTPException(status_code=400, detail="Aucune analyse sélectionnée")
+        
+        # Récupérer toutes les analyses avec leur calculation_model et analysis_results
+        placeholders = ', '.join(['%s'] * len(analysis_ids))
+        
+        query = f"""
+            SELECT 
+                a.id,
+                a.name,
+                a.calculation_model,
+                a.analysis_results
+            FROM analysis a
+            WHERE a.id IN ({placeholders})
+            ORDER BY a.id
+        """
+        
+        print(f"\n🔍 Exécution de la requête SQL...")
+        
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(query, analysis_ids)
+        results = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        print(f"\n✅ {len(results)} analyse(s) récupérée(s)")
+        
+        # Vérifier qu'on a des résultats
+        if not results:
+            raise HTTPException(status_code=404, detail="Aucune analyse trouvée")
+        
+        # ÉTAPE 1 : Collecter tous les critères uniques de toutes les analyses
+        print(f"\n{'=' * 80}")
+        print("ÉTAPE 1 : COLLECTE DES CRITÈRES UNIQUES")
+        print(f"{'=' * 80}")
+        
+        all_criteria = set()  # Utiliser un set pour éviter les doublons
+        
+        for row in results:
+            calculation_model = row.get('calculation_model', [])
+            if calculation_model:
+                for criteria in calculation_model:
+                    criteria_name = criteria.get('nom', '')
+                    if criteria_name:
+                        all_criteria.add(criteria_name)
+                        print(f"  ✓ Critère trouvé: {criteria_name}")
+        
+        # Convertir en liste triée pour un ordre cohérent
+        all_criteria = sorted(list(all_criteria))
+        
+        print(f"\n📊 Total de critères uniques trouvés: {len(all_criteria)}")
+        print(f"📋 Liste des critères: {all_criteria}")
+        
+        if not all_criteria:
+            raise HTTPException(
+                status_code=400, 
+                detail="Aucun critère trouvé dans les modèles de calcul des analyses sélectionnées"
+            )
+        
+        # ÉTAPE 2 : Construire la matrice
+        print(f"\n{'=' * 80}")
+        print("ÉTAPE 2 : CONSTRUCTION DE LA MATRICE")
+        print(f"{'=' * 80}")
+        
+        # Créer le CSV en mémoire
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Écrire l'en-tête : "Analysis" + tous les critères
+        header = ['Analysis'] + all_criteria
+        writer.writerow(header)
+        print(f"\n✍️ En-tête écrit: {len(header)} colonnes")
+        
+        # ÉTAPE 3 : Pour chaque analyse, créer une ligne
+        print(f"\n{'=' * 80}")
+        print("ÉTAPE 3 : REMPLISSAGE DE LA MATRICE")
+        print(f"{'=' * 80}")
+        
+        for idx, row in enumerate(results, 1):
+            analysis_id = row.get('id', '')
+            analysis_name = row.get('name', '')
+            calculation_model = row.get('calculation_model', [])
+            analysis_results = row.get('analysis_results', [])
+            
+            print(f"\n📝 Traitement analyse {idx}/{len(results)}: {analysis_id} - {analysis_name}")
+            
+            # Première colonne : "ID - Name"
+            row_data = [f"{analysis_id} - {analysis_name}"]
+            
+            # Créer un dictionnaire des critères du calculation_model pour cette analyse
+            # Cela nous permet de savoir quels critères existent pour cette analyse
+            criteria_in_model = set()
+            if calculation_model:
+                for criteria in calculation_model:
+                    criteria_name = criteria.get('nom', '')
+                    if criteria_name:
+                        criteria_in_model.add(criteria_name)
+            
+            print(f"  📊 Critères dans le modèle: {len(criteria_in_model)}")
+            
+            # Créer un dictionnaire des résultats d'analyse : {nom_critère: present}
+            results_dict = {}
+            if analysis_results:
+                for result in analysis_results:
+                    result_name = result.get('name', '')
+                    result_present = result.get('present', False)
+                    if result_name:
+                        results_dict[result_name] = result_present
+            
+            print(f"  📊 Résultats d'analyse: {len(results_dict)}")
+            
+            # Pour chaque critère de la liste globale
+            for criteria_name in all_criteria:
+                # Si le critère n'est pas dans le calculation_model de cette analyse
+                if criteria_name not in criteria_in_model:
+                    # Cellule vide
+                    row_data.append('')
+                    print(f"    • {criteria_name[:30]}... → (vide - critère absent du modèle)")
+                else:
+                    # Le critère existe dans le modèle
+                    # Vérifier s'il est validé dans analysis_results
+                    if criteria_name in results_dict:
+                        # 1 si présent (True), 0 si non présent (False)
+                        value = 1 if results_dict[criteria_name] else 0
+                        row_data.append(value)
+                        print(f"    • {criteria_name[:30]}... → {value}")
+                    else:
+                        # Le critère est dans le modèle mais pas dans les résultats
+                        # On considère cela comme non validé (0)
+                        row_data.append(0)
+                        print(f"    • {criteria_name[:30]}... → 0 (pas dans results)")
+            
+            # Écrire la ligne
+            writer.writerow(row_data)
+            print(f"  ✅ Ligne écrite: {len(row_data)} colonnes")
+        
+        print(f"\n{'=' * 80}")
+        print("MATRICE COMPLÉTÉE AVEC SUCCÈS")
+        print(f"{'=' * 80}")
+        
+        # Préparer la réponse
+        output.seek(0)
+        
+        # Générer un nom de fichier avec timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"criteria_matrix_{timestamp}.csv"
+        
+        print(f"\n📦 Taille du CSV: {len(output.getvalue())} caractères")
+        print(f"✅ Export terminé avec succès!")
+        print(f"📄 Nom du fichier: {filename}")
+        print("=" * 80)
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8-sig')),  # utf-8-sig pour Excel
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"\n❌ ERREUR: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'export de la matrice: {str(e)}")

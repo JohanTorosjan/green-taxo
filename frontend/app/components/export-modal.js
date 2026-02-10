@@ -21,6 +21,8 @@ export default class ExportModalComponent extends Component {
   @tracked exportResultsFiles = false;
   @tracked exportCalculationFiles = false;
   @tracked exportJustificationFile = false;
+  @tracked exportGeneralMatrix = false;
+
 
   get exportOptions() {
     return {
@@ -40,16 +42,15 @@ export default class ExportModalComponent extends Component {
       separateFiles: {
         results: this.exportResultsFiles,
         calculationModel: this.exportCalculationFiles,
-        justification: this.exportJustificationFile
+        justification: this.exportJustificationFile,
+        generalMatrix: this.exportGeneralMatrix
       }
     };
   }
 
   get hasAnySeparateFileSelected() {
     return this.exportResultsFiles || 
-           this.exportCalculationFiles || 
-           this.exportJustificationFile;
-  }
+           this.exportCalculationFiles;  }
 
   @action
   stopPropagation(event) {

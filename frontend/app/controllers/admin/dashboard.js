@@ -414,6 +414,36 @@ if(exportOptions.separateFiles.justification){
 }
 
 
+if(exportOptions.separateFiles.generalMatrix){
+  const response = await fetch(`${ENV.APP.apiUrl}/api/admin/exportCriteriaMatrix`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      analysis_ids: this.selectedAnalysesIds,
+      export_options: exportOptions
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur lors de l\'export des résultats');
+  }
+
+  // Télécharger le ZIP
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `general_matrix.csv`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+
+
   } catch (error) {
     console.error('Erreur:', error);
     alert('Erreur lors de l\'export');
