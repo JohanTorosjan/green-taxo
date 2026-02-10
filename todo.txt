@@ -1,5 +1,0 @@
-- Ameliorer table documents
-- Améliorer page criterias
-- Creer dashboard
-
---- > Documents + de 1 chunk semble pas bon criteri met 
