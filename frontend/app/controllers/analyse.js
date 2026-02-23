@@ -15,6 +15,45 @@ export default class AnalyseController extends Controller {
 
   @service auth;
 
+
+
+  @action
+  handleDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('drag-over');
+  }
+
+  @action
+  handleDragLeave(event) {
+    event.currentTarget.classList.remove('drag-over');
+  }
+
+  @action
+  handleDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over');
+
+    const file = event.dataTransfer.files[0];
+      if (!file) {
+        return;
+      }
+
+      // Vérifier que c'est bien un PDF
+      if (file.type !== 'application/pdf') {
+        alert('Veuillez sélectionner uniquement des fichiers PDF.');
+        event.target.value = ''; // Reset input
+        return;
+      }
+    this.selectedFile = file;
+    this.selectedFileName = file.name;
+
+    // Pré-remplir les champs avec les infos du fichier
+    this.extractFileInfo(file);
+
+    // Ouvrir la modale
+    this.showModal = true;
+  }
+
   @action
   handleFileSelect(event) {
     const file = event.target.files[0];

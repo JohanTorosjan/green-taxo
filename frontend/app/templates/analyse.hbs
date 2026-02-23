@@ -9,7 +9,11 @@
     </p>
   </div>
 
-  <div class="upload-zone">
+    <div class="upload-zone"
+      {{on "dragover" this.handleDragOver}}
+      {{on "dragleave" this.handleDragLeave}}
+      {{on "drop" this.handleDrop}}
+    >
     <input
       type="file"
       id="file-input"

@@ -323,7 +323,7 @@ async handleExportConfirm(exportOptions) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `export_${Date.now()}.csv`;
+    a.download = `export.csv`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -350,7 +350,7 @@ if(exportOptions.separateFiles.results){
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `export_results_${Date.now()}.zip`;
+  a.download = `export_results.zip`;
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);
@@ -378,7 +378,7 @@ if(exportOptions.separateFiles.calculationModel){
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `calculation_model_${Date.now()}.zip`;
+  a.download = `calculation_model.zip`;
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);
@@ -406,7 +406,7 @@ if(exportOptions.separateFiles.justification){
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `justifications_${Date.now()}.csv`;
+  a.download = `justifications.csv`;
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);
