@@ -13,8 +13,16 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     MISTRAL_API_KEY: Optional[str] = None
-    
-    DEBUG: bool = True
+
+    # Origines autorisées pour CORS, séparées par des virgules
+    # (ex. "https://greentaxo.example.fr"). "*" = toutes.
+    CORS_ORIGINS: str = "*"
+
+    DEBUG: bool = False
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
     
     class Config:
         env_file = ".env"

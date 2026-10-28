@@ -43,7 +43,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: green-taxo-backend
     restart: unless-stopped
     environment:
@@ -72,7 +72,7 @@ services:
   celery-worker:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: green-taxo-celery-worker
     restart: unless-stopped
     environment:
@@ -99,7 +99,7 @@ services:
   celery-flower:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: green-taxo-flower
     restart: unless-stopped
     environment:
@@ -118,7 +118,8 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
+      target: dev
     container_name: green-taxo-frontend
     restart: unless-stopped
     environment:
@@ -134,7 +135,7 @@ services:
       - backend
     networks:
       - green-taxo-network
-    command: npm start
+    command: npx ember serve --host 0.0.0.0 --port 4200
 
 networks:
   green-taxo-network:

@@ -1,19 +1,30 @@
-FROM node:18-alpine
-
+# ---------------------------------------------------------------------------
+# Étape "dev" : serveur Ember de développement (utilisée par docker-compose)
+# ---------------------------------------------------------------------------
+FROM node:20-alpine AS dev
 WORKDIR /app
-
-# Installer Ember CLI globalement
-RUN npm install -g ember-cli@5.5.0
-
-# Copier package.json et package-lock.json
 COPY package*.json ./
-
-# Installer les dépendances
-RUN npm install
-
-# Copier le reste du code
+RUN npm ci --no-audit --no-fund
 COPY . .
-
 EXPOSE 4200
+CMD ["npx", "ember", "serve", "--host", "0.0.0.0", "--port", "4200"]
 
-CMD ["ember", "serve", "--host", "0.0.0.0", "--port", "4200"]
+# ---------------------------------------------------------------------------
+# Étape "build" : build de production. L'URL de l'API est un marqueur,
+# remplacé au démarrage du conteneur par la variable API_HOST.
+# ---------------------------------------------------------------------------
+FROM dev AS build
+RUN API_HOST=__API_HOST__ npx ember build --environment=production
+
+# ---------------------------------------------------------------------------
+# Étape finale : fichiers statiques servis par nginx (non-root, port 8080)
+# ---------------------------------------------------------------------------
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
+USER root
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/40-inject-api-host.sh /docker-entrypoint.d/40-inject-api-host.sh
+COPY --from=build /app/dist /usr/share/nginx/html
+RUN chmod +x /docker-entrypoint.d/40-inject-api-host.sh \
+    && chown -R 101:101 /usr/share/nginx/html
+USER 101
+EXPOSE 8080

@@ -19,8 +19,6 @@ export default class CriteriasController extends Controller {
     dataError: null,
   };
 
-  API_URL = 'http://localhost:8000';
-
   get criterias() {
     console.log('[Criterias] Getter criterias - model:', this.model);
     return Array.isArray(this.model) ? this.model : [];
